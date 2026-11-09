@@ -1,6 +1,5 @@
 """Télécharge les matchs ATP/WTA, les importe, puis calcule les notes Elo.
-Lancer une seule fois :  python setup_data.py
-(Variable optionnelle : DATABASE_URL = adresse de ta base Neon)"""
+Peut être lancé en ligne de commande ou depuis le site (/setup)."""
 import urllib.request
 from pathlib import Path
 
@@ -12,7 +11,7 @@ ANNEES = range(2015, 2026)
 REPOS = {"atp": "tennis_atp", "wta": "tennis_wta"}
 
 
-def telecharger(tour, annee):
+def telecharger(tour, annee, log):
     dest = Path("data") / f"{tour}_matches_{annee}.csv"
     dest.parent.mkdir(exist_ok=True)
     if not dest.exists():
@@ -21,19 +20,24 @@ def telecharger(tour, annee):
         try:
             urllib.request.urlretrieve(url, dest)
         except Exception as e:
-            print("  introuvable :", annee, e)
+            log(f"{tour} {annee} introuvable ({e})")
             return None
     return dest
 
 
-if __name__ == "__main__":
+def tout_faire(log=print):
     init_db()
     with SessionLocal() as s:
         for tour in REPOS:
             for a in ANNEES:
-                p = telecharger(tour, a)
+                p = telecharger(tour, a, log)
                 if p:
-                    print(tour, a, import_year(s, tour, p), "matchs")
+                    log(f"{tour} {a} : {import_year(s, tour, p)} matchs importes")
     for tour in REPOS:
-        run_db(tour)
+        log("Calcul des notes " + tour + "...")
+        log(run_db(tour))
+    log("TERMINE")
 
+
+if __name__ == "__main__":
+    tout_faire()
