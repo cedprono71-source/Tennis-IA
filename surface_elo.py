@@ -11,7 +11,6 @@ else:
     print("Erreur de téléchargement des données.")
     exit()
 
-# Dictionnaire pour stocker l'Elo par surface : {joueur: {'Hard': 1500, 'Clay': 1500, 'Grass': 1500}}
 players_elo = {}
 
 def get_elo(player_name, surface):
@@ -40,10 +39,15 @@ df = df.sort_values("tourney_date").reset_index(drop=True)
 for _, row in df.iterrows():
     update_surface_elo(row["winner_name"], row["loser_name"], row["surface"])
 
-# Affichage du Top 5 sur Terre battue (Clay)
-clay_sorted = sorted(players_elo.items(), key=lambda x: x[1]["Clay"], reverse=True)
+def predict_match(player1, player2, surface):
+    p1_elo = get_elo(player1, surface)
+    p2_elo = get_elo(player2, surface)
 
-print("— Top 5 sur Terre battue (Clay) —")
-for player, elos in clay_sorted[:5]:
-    print(f"{player} : {round(elos['Clay'], 1)}")
+    prob_p1 = 1 / (1 + 10 ** ((p2_elo - p1_elo) / 400))
+    prob_p2 = 1 - prob_p1
 
+    print(f"— Prédiction sur {surface} —")
+    print(f"{player1} ({round(p1_elo)} Elo) : {round(prob_p1 * 100, 1)} %")
+    print(f"{player2} ({round(p2_elo)} Elo) : {round(prob_p2 * 100, 1)} %")
+
+predict_match("Jannik Sinner", "Carlos Alcaraz", "Hard")
