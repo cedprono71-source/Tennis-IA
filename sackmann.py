@@ -23,6 +23,10 @@ def _int(v):
 
 def import_year(session, tour: str, path: Path):
     n = 0
+    # On charge une fois ce qui existe déjà (évite des milliers de requêtes)
+    known_players = {x[0] for x in session.query(Player.id).filter_by(tour=tour)}
+    known_tourneys = {x[0] for x in session.query(Tournament.id).filter_by(tour=tour)}
+    known_matches = {(x[0], x[1]) for x in session.query(Match.tourney_id, Match.match_num).filter_by(tour=tour)}
     with open(path, newline="", encoding="utf-8") as f:
         for r in csv.DictReader(f):
             try:
@@ -33,13 +37,15 @@ def import_year(session, tour: str, path: Path):
             tid = f"{tour}:{r['tourney_id']}"
 
             for pid, pre in ((wid, "winner"), (lid, "loser")):
-                if not session.get(Player, pid):
+                if pid not in known_players:
+                    known_players.add(pid)
                     session.add(Player(
                         id=pid, tour=tour, name=r[f"{pre}_name"],
                         hand=(r.get(f"{pre}_hand") or None),
                         height=_int(r.get(f"{pre}_ht")),
                         country=(r.get(f"{pre}_ioc") or None)))
-            if not session.get(Tournament, tid):
+            if tid not in known_tourneys:
+                known_tourneys.add(tid)
                 session.add(Tournament(
                     id=tid, tour=tour, name=r["tourney_name"],
                     surface=r.get("surface") or None,
@@ -48,9 +54,9 @@ def import_year(session, tour: str, path: Path):
             session.flush()
 
             mnum = _int(r.get("match_num"))
-            exists = session.query(Match.id).filter_by(tourney_id=tid, match_num=mnum).first()
-            if exists:
+            if (tid, mnum) in known_matches:
                 continue
+            known_matches.add((tid, mnum))
             session.add(Match(
                 tour=tour, tourney_id=tid, match_num=mnum, date=date,
                 surface=r.get("surface") or None, round=r.get("round"),
