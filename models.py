@@ -1,6 +1,6 @@
 from sqlalchemy import String, Integer, Float, Date, ForeignKey, UniqueConstraint, Index
 from sqlalchemy.orm import Mapped, mapped_column
-from app.db import Base
+from db import Base
 
 
 class Player(Base):
@@ -67,4 +67,3 @@ class EloRating(Base):
     elo_global: Mapped[float] = mapped_column(Float)
     elo_surface: Mapped[float] = mapped_column(Float)
     surface: Mapped[str | None] = mapped_column(String(10), nullable=True)
-
