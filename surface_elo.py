@@ -2,15 +2,6 @@ import io
 import pandas as pd
 import requests
 
-url = "https://raw.githubusercontent.com/JeffSackmann/tennis_atp/master/atp_matches_2024.csv"
-response = requests.get(url)
-
-if response.status_code == 200:
-    df = pd.read_csv(io.StringIO(response.content.decode("utf-8")))
-else:
-    print("Erreur de téléchargement des données.")
-    exit()
-
 players_elo = {}
 
 def get_elo(player_name, surface):
@@ -33,11 +24,20 @@ def update_surface_elo(winner, loser, surface, k=32):
     players_elo[winner][surface] = w_elo + k * (1 - exp_winner)
     players_elo[loser][surface] = l_elo + k * (0 - exp_loser)
 
-df["tourney_date"] = pd.to_datetime(df["tourney_date"], format="%Y%m%d")
-df = df.sort_values("tourney_date").reset_index(drop=True)
+# Traitement sur plusieurs années pour consolider l'historique
+years = [2022, 2023, 2024]
 
-for _, row in df.iterrows():
-    update_surface_elo(row["winner_name"], row["loser_name"], row["surface"])
+for year in years:
+    url = f"https://raw.githubusercontent.com/JeffSackmann/tennis_atp/master/atp_matches_{year}.csv"
+    response = requests.get(url)
+    
+    if response.status_code == 200:
+        df = pd.read_csv(io.StringIO(response.content.decode("utf-8")))
+        df["tourney_date"] = pd.to_datetime(df["tourney_date"], format="%Y%m%d")
+        df = df.sort_values("tourney_date").reset_index(drop=True)
+
+        for _, row in df.iterrows():
+            update_surface_elo(row["winner_name"], row["loser_name"], row["surface"])
 
 def predict_match(player1, player2, surface):
     p1_elo = get_elo(player1, surface)
@@ -46,7 +46,7 @@ def predict_match(player1, player2, surface):
     prob_p1 = 1 / (1 + 10 ** ((p2_elo - p1_elo) / 400))
     prob_p2 = 1 - prob_p1
 
-    print(f"— Prédiction sur {surface} —")
+    print(f"— Prédiction sur {surface} (1822-2024) —")
     print(f"{player1} ({round(p1_elo)} Elo) : {round(prob_p1 * 100, 1)} %")
     print(f"{player2} ({round(p2_elo)} Elo) : {round(prob_p2 * 100, 1)} %")
 
