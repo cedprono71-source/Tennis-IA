@@ -87,7 +87,9 @@ def run_db(tour: str):
                                 elo_global=eng.g[pid], elo_surface=eng.s[(pid, surf)],
                                 surface=surf))
         s.commit()
-        print(f"{tour.upper()} : {n} matchs | accuracy {ok/n:.3f} | log-loss {ll/n:.4f}")
+        msg = f"{tour.upper()} : {n} matchs | reussite {ok/max(n,1):.3f} | log-loss {ll/max(n,1):.4f}"
+        print(msg)
+        return msg
 
 
 if __name__ == "__main__":
