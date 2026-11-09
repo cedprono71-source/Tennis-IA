@@ -1,8 +1,8 @@
 """Import des CSV de Jeff Sackmann (tennis_atp / tennis_wta).
 
 Usage :
-    python -m app.ingest.sackmann atp ./tennis_atp 2015 2025
-    python -m app.ingest.sackmann wta ./tennis_wta 2015 2025
+    python sackmann.py atp ./tennis_atp 2015 2025
+    python sackmann.py wta ./tennis_wta 2015 2025
 Fichiers attendus : {tour}_matches_{année}.csv
 """
 import csv
@@ -10,8 +10,8 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-from app.db import SessionLocal, init_db
-from app.models import Player, Tournament, Match
+from db import SessionLocal, init_db
+from models import Player, Tournament, Match
 
 
 def _int(v):
@@ -72,4 +72,3 @@ if __name__ == "__main__":
             p = folder / f"{tour}_matches_{y}.csv"
             if p.exists():
                 print(y, import_year(s, tour, p), "matchs")
-
