@@ -1,7 +1,7 @@
 """Elo global + par surface, avec backtest.
 
 Le cœur (EloEngine) est sans base de données : testable seul.
-Usage :  python -m app.elo atp
+Usage :  python elo.py atp
 """
 import math
 import sys
@@ -66,8 +66,8 @@ def run_backtest(matches):
 
 
 def run_db(tour: str):
-    from app.db import SessionLocal, init_db
-    from app.models import Match, EloRating
+    from db import SessionLocal, init_db
+    from models import Match, EloRating
     init_db()
     with SessionLocal() as s:
         s.query(EloRating).filter(
@@ -92,4 +92,3 @@ def run_db(tour: str):
 
 if __name__ == "__main__":
     run_db(sys.argv[1] if len(sys.argv) > 1 else "atp")
-
