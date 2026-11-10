@@ -22,6 +22,7 @@ h2{font-size:13px;color:var(--mut);text-transform:uppercase;letter-spacing:.04em
 .row{display:flex;align-items:center;gap:10px;padding:10px 12px}
 .t{width:44px;font-size:13px;color:var(--mut);flex:0 0 auto}
 .p{flex:1;min-width:0;font-size:15px}.p div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pr{flex:0 0 auto;text-align:right;font-size:14px;color:var(--mut)}.pr div{white-space:nowrap}.pr .fav{color:var(--acc);font-weight:700}
 .w{font-weight:700}.sc{font-size:13px;color:var(--mut);text-align:right;flex:0 0 auto}
 .det{display:none;padding:0 12px 12px;border-top:1px solid var(--bd);font-size:14px}.m.open .det{display:block}
 .ctl{display:flex;gap:8px;margin:10px 0}.ctl select{flex:1;padding:8px;border-radius:8px;border:1px solid var(--bd);background:var(--bg);color:var(--txt);font-size:14px}
@@ -29,10 +30,11 @@ h2{font-size:13px;color:var(--mut);text-transform:uppercase;letter-spacing:.04em
 .bar span{display:flex;align-items:center;padding:0 8px;white-space:nowrap}.bar .a{background:var(--bar2)}.bar .b{margin-left:auto;color:var(--txt)}
 table{width:100%;border-collapse:collapse;margin-top:6px}td,th{padding:5px 4px;text-align:center;border-bottom:1px solid var(--bd);font-size:13px}th{color:var(--mut);font-weight:500}
 .mut{color:var(--mut);font-size:12px;margin-top:8px}.err{color:#dc2626;padding:8px 0}
-.empty{text-align:center;color:var(--mut);padding:40px 10px}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}.kpi{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:10px 12px}.kpi b{display:block;font-size:22px}.kpi span{font-size:12px;color:var(--mut)}
+.ok{color:var(--acc)}.ko{color:#dc2626}.empty{text-align:center;color:var(--mut);padding:40px 10px}
 </style></head><body>
 <header><h1>🎾 Pronostics Tennis</h1><div class="days" id="days"></div>
-<div class="tabs"><div class="tab on" data-t="atp">ATP</div><div class="tab" data-t="wta">WTA</div></div></header>
+<div class="tabs"><div class="tab on" data-t="atp">ATP</div><div class="tab" data-t="wta">WTA</div><div class="tab" data-t="suivi">Suivi</div></div></header>
 <main id="list"><div class="empty">Chargement…</div></main>
 <script>
 var JOURS=["dim","lun","mar","mer","jeu","ven","sam"];
@@ -54,10 +56,11 @@ function buildDays(){
 }
 document.querySelectorAll(".tab").forEach(function(t){t.onclick=function(){
   document.querySelectorAll(".tab").forEach(function(x){x.classList.remove("on")});t.classList.add("on");
-  etat.tour=t.dataset.t;charger()}});
+  etat.tour=t.dataset.t;document.getElementById("days").style.display=(etat.tour==="suivi")?"none":"flex";charger()}});
 
 function charger(){
   var main=document.getElementById("list");main.innerHTML="";main.appendChild(el("div","empty","Chargement…"));
+  if(etat.tour==="suivi"){return chargerSuivi(main)}
   var tour=etat.tour,jour=etat.jour;
   fetch("/api/calendrier?tour="+tour+"&date="+jour).then(function(r){return r.json()}).then(function(d){
     if(tour!==etat.tour||jour!==etat.jour)return;
@@ -70,6 +73,34 @@ function charger(){
       main.appendChild(carte(m));
     });
   }).catch(function(e){main.innerHTML="";main.appendChild(el("div","err","Erreur réseau"))});
+}
+
+function kpi(valeur,libelle){var k=el("div","kpi");k.appendChild(el("b","",valeur));k.appendChild(el("span","",libelle));return k}
+function chargerSuivi(main){
+  fetch("/api/suivi").then(function(r){return r.json()}).then(function(d){
+    if(etat.tour!=="suivi")return;
+    main.innerHTML="";
+    if(d.erreur){main.appendChild(el("div","err",d.erreur));return}
+    var v=d.vainqueur,o=d.over_under;
+    var g=el("div","kpis");
+    g.appendChild(kpi(d.n?pct(v.reussite):"–","Vainqueur trouvé ("+d.n+" matchs)"));
+    g.appendChild(kpi(v.forts_n?pct(v.forts_reussite):"–","Favoris ≥65% ("+v.forts_n+")"));
+    g.appendChild(kpi(o.n?pct(o.reussite):"–","Plus/moins de jeux ("+o.n+")"));
+    g.appendChild(kpi(o.n?(o.jeux_prevus+" / "+o.jeux_reels):"–","Jeux prévus / réels"));
+    main.appendChild(g);
+    main.appendChild(el("div","mut","En attente de résultat : "+d.en_attente+" · Dernier tour automatique : "+(d.cycle.dernier||"–")+" ("+d.cycle.resume+")"));
+    if(!d.derniers.length){main.appendChild(el("div","empty","Pas encore de résultat. Les pronostics sont enregistrés automatiquement avant chaque match."));return}
+    main.appendChild(el("h2","","Derniers résultats"));
+    d.derniers.forEach(function(p){
+      var c=el("div","m"),row=el("div","row");
+      row.appendChild(el("div","t",p.jour.slice(5)));
+      var n=el("div","p");n.appendChild(el("div",p.gagnant===0?"w":"",p.a));n.appendChild(el("div",p.gagnant===1?"w":"",p.b));row.appendChild(n);
+      var q=el("div","pr");q.appendChild(el("div","",pct(p.p_a)+" / "+pct(1-p.p_a)));
+      var l=el("div",p.ok_vainqueur?"ok":"ko",(p.ok_vainqueur?"✅ vainqueur":"❌ vainqueur"));q.appendChild(l);
+      if(p.ok_over!==null&&p.ok_over!==undefined){q.appendChild(el("div",p.ok_over?"ok":"ko",(p.ok_over?"✅ ":"❌ ")+p.total_jeux+" jeux (ligne "+p.ligne+")"))}
+      row.appendChild(q);c.appendChild(row);main.appendChild(c);
+    });
+  }).catch(function(){main.innerHTML="";main.appendChild(el("div","err","Erreur réseau"))});
 }
 
 function devinerSurface(t){
@@ -85,8 +116,14 @@ function carte(m){
   var p=el("div","p");
   p.appendChild(el("div",m.gagnant===0?"w":"",m.a));p.appendChild(el("div",m.gagnant===1?"w":"",m.b));
   row.appendChild(p);
+  if(m.p_a!==null&&m.p_a!==undefined){
+    var pr=el("div","pr");
+    pr.appendChild(el("div",m.p_a>=0.5?"fav":"",pct(m.p_a)+(m.ok===1?" ✅":m.ok===0?" ❌":"")));
+    pr.appendChild(el("div",m.p_a<0.5?"fav":"",pct(1-m.p_a)));
+    row.appendChild(pr);
+  }
   var sc=el("div","sc");
-  if(m.etat==="post"||m.etat==="in"){sc.textContent="";
+  if(m.etat==="post"||m.etat==="in"){
     [0,1].forEach(function(i){sc.appendChild(el("div","",m.scores[i].join(" ")||"–"))});
   }else{sc.textContent=m.tour_tableau}
   row.appendChild(sc);c.appendChild(row);
@@ -100,15 +137,13 @@ function carte(m){
 
 function formulaire(det,m){
   var ctl=el("div","ctl");
-  var sf=el("select");["Hard","Clay","Grass"].forEach(function(s){var o=el("option","",s);o.value=s;sf.appendChild(o)});
-  sf.value=devinerSurface(m.tournoi);
-  var bo=el("select");[3,5].forEach(function(n){var o=el("option","",n===3?"3 sets (2 gagnants)":"5 sets (3 gagnants)");o.value=n;bo.appendChild(o)});
-  bo.value=devinerBo(m.tournoi,m.tour);
+  var sf=el("select");[["auto","Surface auto"],["Hard","Dur"],["Clay","Terre"],["Grass","Gazon"]].forEach(function(s){var o=el("option","",s[1]);o.value=s[0];sf.appendChild(o)});
+  var bo=el("select");[["0","Format auto"],["3","3 sets"],["5","5 sets"]].forEach(function(s){var o=el("option","",s[1]);o.value=s[0];bo.appendChild(o)});
   ctl.appendChild(sf);ctl.appendChild(bo);det.appendChild(ctl);
   var res=el("div");det.appendChild(res);
   function go(){
     res.innerHTML="";res.appendChild(el("div","mut","Calcul en cours…"));
-    var u="/match?tour="+m.tour+"&a="+encodeURIComponent(m.a)+"&b="+encodeURIComponent(m.b)+"&surface="+sf.value+"&best_of="+bo.value;
+    var u="/match?tour="+m.tour+"&a="+encodeURIComponent(m.a)+"&b="+encodeURIComponent(m.b)+"&surface="+sf.value+"&best_of="+bo.value+"&tournoi="+encodeURIComponent(m.tournoi||"");
     fetch(u).then(function(r){return r.json()}).then(function(d){afficher(res,d)}).catch(function(){res.innerHTML="";res.appendChild(el("div","err","Erreur réseau"))});
   }
   sf.onchange=go;bo.onchange=go;go();
@@ -120,6 +155,7 @@ function afficher(res,d){
   var noms=Object.keys(d.proba_victoire_elo);var pa=d.proba_victoire_elo[noms[0]],pb=d.proba_victoire_elo[noms[1]];
   var bar=el("div","bar");var a=el("span","a",noms[0].split(" ").pop()+" "+pct(pa));a.style.width=(pa*100)+"%";
   var b=el("span","b",pct(pb)+" "+noms[1].split(" ").pop());bar.appendChild(a);bar.appendChild(b);res.appendChild(bar);
+  res.appendChild(el("div","mut","Surface : "+d.surface+" · "+d.format));
   res.appendChild(el("div","mut","Jeux attendus : "+d.jeux_attendus+" · Service (pts gagnés) : "+d.points_au_service[noms[0]]+" / "+d.points_au_service[noms[1]]));
   var t=el("table");var h=el("tr");["Ligne","Plus de","Moins de"].forEach(function(x){h.appendChild(el("th","",x))});t.appendChild(h);
   Object.keys(d.over).forEach(function(l){var r=el("tr");r.appendChild(el("td","",l));r.appendChild(el("td","",pct(d.over[l])));r.appendChild(el("td","",pct(1-d.over[l])));t.appendChild(r)});
@@ -132,4 +168,3 @@ function afficher(res,d){
 buildDays();charger();
 </script></body></html>
 """
-
