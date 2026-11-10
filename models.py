@@ -67,3 +67,26 @@ class EloRating(Base):
     elo_global: Mapped[float] = mapped_column(Float)
     elo_surface: Mapped[float] = mapped_column(Float)
     surface: Mapped[str | None] = mapped_column(String(20), nullable=True)
+
+
+class Prediction(Base):
+    """Un pronostic enregistré avant le match, puis comparé au résultat réel."""
+    __tablename__ = "predictions"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    cle: Mapped[str] = mapped_column(String, unique=True, index=True)  # tour|date|a|b
+    tour: Mapped[str] = mapped_column(String(3))
+    jour: Mapped[object] = mapped_column(Date, index=True)
+    tournoi: Mapped[str | None] = mapped_column(String, nullable=True)
+    a: Mapped[str] = mapped_column(String)
+    b: Mapped[str] = mapped_column(String)
+    surface: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    best_of: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    p_a: Mapped[float | None] = mapped_column(Float, nullable=True)          # proba que A gagne
+    jeux_attendus: Mapped[float | None] = mapped_column(Float, nullable=True)
+    ligne: Mapped[float | None] = mapped_column(Float, nullable=True)        # ligne over/under suivie
+    p_over: Mapped[float | None] = mapped_column(Float, nullable=True)
+    statut: Mapped[str] = mapped_column(String(12), default="attente")       # attente / fait / annule
+    gagnant: Mapped[int | None] = mapped_column(Integer, nullable=True)      # 0 = A, 1 = B
+    total_jeux: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    ok_vainqueur: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    ok_over: Mapped[int | None] = mapped_column(Integer, nullable=True)
