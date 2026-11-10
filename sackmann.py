@@ -21,14 +21,24 @@ def _int(v):
         return None
 
 
-def import_year(session, tour: str, path: Path):
+def import_year(session, tour: str, path: Path, log=print):
     n = 0
+    lignes = 0
     # On charge une fois ce qui existe déjà (évite des milliers de requêtes)
     known_players = {x[0] for x in session.query(Player.id).filter_by(tour=tour)}
     known_tourneys = {x[0] for x in session.query(Tournament.id).filter_by(tour=tour)}
     known_matches = {(x[0], x[1]) for x in session.query(Match.tourney_id, Match.match_num).filter_by(tour=tour)}
-    with open(path, newline="", encoding="utf-8") as f:
-        for r in csv.DictReader(f):
+    raw = Path(path).read_bytes()
+    if raw[:2] == b"\x1f\x8b":  # fichier compressé
+        import gzip
+        raw = gzip.decompress(raw)
+    texte = raw.decode("utf-8-sig", errors="replace")
+    reader = csv.DictReader(texte.splitlines())
+    if "tourney_date" not in (reader.fieldnames or []):
+        log(f"{path.name}: colonnes inattendues -> {texte[:150]!r}")
+    if True:
+        for r in reader:
+            lignes += 1
             try:
                 date = datetime.strptime(r["tourney_date"], "%Y%m%d").date()
             except (KeyError, ValueError):
@@ -67,6 +77,8 @@ def import_year(session, tour: str, path: Path):
                    for k in ("ace", "df", "svpt", "1stIn", "1stWon", "2ndWon")}))
             n += 1
     session.commit()
+    if n == 0:
+        log(f"{path.name}: {lignes} lignes lues, 0 ajoutee(s)")
     return n
 
 
