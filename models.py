@@ -8,9 +8,9 @@ class Player(Base):
     id: Mapped[str] = mapped_column(String, primary_key=True)  # "atp:104925"
     tour: Mapped[str] = mapped_column(String(3))
     name: Mapped[str] = mapped_column(String)
-    hand: Mapped[str | None] = mapped_column(String(1), nullable=True)
+    hand: Mapped[str | None] = mapped_column(String(5), nullable=True)
     height: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    country: Mapped[str | None] = mapped_column(String(3), nullable=True)
+    country: Mapped[str | None] = mapped_column(String(10), nullable=True)
 
 
 class Tournament(Base):
@@ -18,8 +18,8 @@ class Tournament(Base):
     id: Mapped[str] = mapped_column(String, primary_key=True)  # "atp:2024-580"
     tour: Mapped[str] = mapped_column(String(3))
     name: Mapped[str] = mapped_column(String)
-    surface: Mapped[str | None] = mapped_column(String(10), nullable=True)  # Hard/Clay/Grass/Carpet
-    level: Mapped[str | None] = mapped_column(String(2), nullable=True)  # G, M, A, F...
+    surface: Mapped[str | None] = mapped_column(String(20), nullable=True)  # Hard/Clay/Grass/Carpet
+    level: Mapped[str | None] = mapped_column(String(10), nullable=True)  # G, M, A, PM...
     best_of: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
 
@@ -30,8 +30,8 @@ class Match(Base):
     tourney_id: Mapped[str] = mapped_column(ForeignKey("tournaments.id"))
     match_num: Mapped[int] = mapped_column(Integer)
     date: Mapped[object] = mapped_column(Date, index=True)
-    surface: Mapped[str | None] = mapped_column(String(10), nullable=True)
-    round: Mapped[str | None] = mapped_column(String(5), nullable=True)
+    surface: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    round: Mapped[str | None] = mapped_column(String(10), nullable=True)
     best_of: Mapped[int | None] = mapped_column(Integer, nullable=True)
     winner_id: Mapped[str] = mapped_column(ForeignKey("players.id"))
     loser_id: Mapped[str] = mapped_column(ForeignKey("players.id"))
@@ -66,4 +66,4 @@ class EloRating(Base):
     date: Mapped[object] = mapped_column(Date)
     elo_global: Mapped[float] = mapped_column(Float)
     elo_surface: Mapped[float] = mapped_column(Float)
-    surface: Mapped[str | None] = mapped_column(String(10), nullable=True)
+    surface: Mapped[str | None] = mapped_column(String(20), nullable=True)
