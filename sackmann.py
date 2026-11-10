@@ -21,9 +21,23 @@ def _int(v):
         return None
 
 
+def _date(v):
+    v = (v or "").strip()
+    if len(v) >= 8 and v[:8].isdigit():
+        return datetime.strptime(v[:8], "%Y%m%d").date()
+    for fmt in ("%Y-%m-%d", "%d/%m/%Y", "%m/%d/%Y", "%Y/%m/%d"):
+        try:
+            return datetime.strptime(v[:10], fmt).date()
+        except ValueError:
+            pass
+    raise ValueError(v)
+
+
 def import_year(session, tour: str, path: Path, log=print):
     n = 0
     lignes = 0
+    nd = nk = 0
+    ex = ''
     # On charge une fois ce qui existe déjà (évite des milliers de requêtes)
     known_players = {x[0] for x in session.query(Player.id).filter_by(tour=tour)}
     known_tourneys = {x[0] for x in session.query(Tournament.id).filter_by(tour=tour)}
@@ -40,8 +54,10 @@ def import_year(session, tour: str, path: Path, log=print):
         for r in reader:
             lignes += 1
             try:
-                date = datetime.strptime(r["tourney_date"], "%Y%m%d").date()
-            except (KeyError, ValueError):
+                date = _date(r["tourney_date"])
+            except (KeyError, ValueError) as e:
+                nd += 1
+                ex = repr(e)
                 continue
             wid, lid = f"{tour}:{r['winner_id']}", f"{tour}:{r['loser_id']}"
             tid = f"{tour}:{r['tourney_id']}"
@@ -65,6 +81,7 @@ def import_year(session, tour: str, path: Path, log=print):
 
             mnum = _int(r.get("match_num"))
             if (tid, mnum) in known_matches:
+                nk += 1
                 continue
             known_matches.add((tid, mnum))
             session.add(Match(
@@ -78,7 +95,7 @@ def import_year(session, tour: str, path: Path, log=print):
             n += 1
     session.commit()
     if n == 0:
-        log(f"{path.name}: {lignes} lignes lues, 0 ajoutee(s)")
+        log(f"{path.name}: {lignes} lignes, dates illisibles={nd} {ex}, deja connus={nk}")
     return n
 
 
