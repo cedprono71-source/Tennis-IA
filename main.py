@@ -1,10 +1,11 @@
 import threading
+import time
 from datetime import date
 from fastapi import FastAPI, Query
 from fastapi.responses import HTMLResponse
 from sqlalchemy import func
 from db import SessionLocal, init_db
-from models import EloRating, Player
+from models import EloRating, Player, Prediction
 
 app = FastAPI(title="Pronostics Tennis")
 init_db()
@@ -12,6 +13,32 @@ init_db()
 ETAT = {"etat": "inactif", "journal": []}
 
 
+# ---------- tâche automatique : pronostics + résultats toutes les 15 min ----------
+def _boucle():
+    import suivi
+    time.sleep(20)
+    while True:
+        try:
+            suivi.cycle()
+        except Exception:  # noqa: BLE001
+            pass
+        time.sleep(900)
+
+
+@app.on_event("startup")
+def demarrer():
+    threading.Thread(target=_boucle, daemon=True).start()
+
+
+@app.get("/api/cron")
+def cron():
+    """À appeler par ton cron (toutes les 10 min) : réveille le site et lance un tour."""
+    import suivi
+    threading.Thread(target=suivi.cycle, daemon=True).start()
+    return {"statut": "ok", "dernier_tour": suivi.ETAT_CYCLE}
+
+
+# ---------- pages ----------
 @app.get("/", response_class=HTMLResponse)
 def accueil():
     from page import PAGE
@@ -25,17 +52,44 @@ def health():
 
 @app.get("/api/calendrier")
 def calendrier(tour: str = "atp", date_: str = Query(None, alias="date"), brut: int = 0):
-    """Matchs du jour (ESPN). Exemple : /api/calendrier?tour=atp&date=2026-11-10"""
+    """Matchs du jour (ESPN) + pronostic enregistré. Ex : /api/calendrier?tour=atp&date=2026-11-10"""
     from espn import matchs_du_jour, brut as flux_brut
     try:
         jour = date.fromisoformat(date_) if date_ else date.today()
         if brut:
             return {"brut": flux_brut(tour, jour)}
-        return {"jour": str(jour), "matchs": matchs_du_jour(tour, jour)}
+        matchs = matchs_du_jour(tour, jour)
+        with SessionLocal() as s:
+            preds = {p.cle: p for p in s.query(Prediction).filter(
+                Prediction.jour == jour, Prediction.tour == tour)}
+        for m in matchs:
+            p = preds.get(f"{tour}|{jour}|{m['a']}|{m['b']}")
+            m["p_a"] = p.p_a if p else None
+            m["surface"] = p.surface if p else None
+            m["ok"] = p.ok_vainqueur if p else None
+        return {"jour": str(jour), "matchs": matchs}
     except Exception as e:  # noqa: BLE001
         return {"erreur": repr(e)}
 
 
+@app.get("/api/suivi")
+def api_suivi():
+    import suivi
+    try:
+        return suivi.stats()
+    except Exception as e:  # noqa: BLE001
+        return {"erreur": repr(e)}
+
+
+@app.get("/match")
+def match(tour: str, a: str, b: str, surface: str = "auto", best_of: int = 0,
+          ligne: float | None = None, tournoi: str | None = None):
+    """Ex : /match?tour=atp&a=Sinner&b=Alcaraz&tournoi=Paris Masters (surface et format automatiques)"""
+    from predict import pronostic
+    return pronostic(tour, a, b, surface, best_of, ligne, tournoi)
+
+
+# ---------- import initial des matchs historiques ----------
 def _log(msg):
     ETAT["journal"].append(msg)
 
@@ -63,14 +117,6 @@ def setup():
 @app.get("/setup/status")
 def setup_status():
     return ETAT
-
-
-@app.get("/match")
-def match(tour: str, a: str, b: str, surface: str = "Hard",
-          best_of: int = 3, ligne: float | None = None):
-    """Exemple : /match?tour=atp&a=Sinner&b=Alcaraz&surface=Hard&ligne=22.5"""
-    from predict import pronostic
-    return pronostic(tour, a, b, surface, best_of, ligne)
 
 
 @app.get("/top/{tour}")
