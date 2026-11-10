@@ -14,15 +14,29 @@ REPOS = {"atp": "tennis_atp", "wta": "tennis_wta"}
 def telecharger(tour, annee, log):
     dest = Path("data") / f"{tour}_matches_{annee}.csv"
     dest.parent.mkdir(exist_ok=True)
-    if not dest.exists():
-        url = (f"https://raw.githubusercontent.com/JeffSackmann/"
-               f"{REPOS[tour]}/master/{tour}_matches_{annee}.csv")
+    if dest.exists() and dest.stat().st_size > 1000:
+        return dest
+    repo, f = REPOS[tour], f"{tour}_matches_{annee}.csv"
+    urls = [
+        f"https://raw.githubusercontent.com/JeffSackmann/{repo}/master/{f}",
+        f"https://raw.githubusercontent.com/JeffSackmann/{repo}/refs/heads/master/{f}",
+        f"https://raw.githubusercontent.com/JeffSackmann/{repo}/main/{f}",
+        f"https://github.com/JeffSackmann/{repo}/raw/master/{f}",
+    ]
+    erreurs = []
+    for url in urls:
         try:
-            urllib.request.urlretrieve(url, dest)
+            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+            with urllib.request.urlopen(req, timeout=60) as r:
+                data = r.read()
+            if len(data) > 1000:
+                dest.write_bytes(data)
+                return dest
+            erreurs.append(f"trop petit ({len(data)} octets)")
         except Exception as e:
-            log(f"{tour} {annee} introuvable ({e})")
-            return None
-    return dest
+            erreurs.append(f"{url.split('/')[2]}...{url.split('/')[-2]} -> {e}")
+    log(f"{tour} {annee} introuvable : " + " | ".join(erreurs[:2]))
+    return None
 
 
 def tout_faire(log=print):
