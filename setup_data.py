@@ -18,10 +18,11 @@ def telecharger(tour, annee, log):
         return dest
     repo, f = REPOS[tour], f"{tour}_matches_{annee}.csv"
     urls = [
+        # Copie de sauvegarde (le dépôt d'origine de Sackmann répond 404)
+        f"https://raw.githubusercontent.com/Aneeshers/tennis-sackmann-archive/main/{tour}/{f}",
+        f"https://huggingface.co/datasets/Aneeshers/tennis-sackmann-archive/resolve/main/{tour}/{f}",
+        # Dépôt d'origine, au cas où il reviendrait
         f"https://raw.githubusercontent.com/JeffSackmann/{repo}/master/{f}",
-        f"https://raw.githubusercontent.com/JeffSackmann/{repo}/refs/heads/master/{f}",
-        f"https://raw.githubusercontent.com/JeffSackmann/{repo}/main/{f}",
-        f"https://github.com/JeffSackmann/{repo}/raw/master/{f}",
     ]
     erreurs = []
     for url in urls:
@@ -34,8 +35,8 @@ def telecharger(tour, annee, log):
                 return dest
             erreurs.append(f"trop petit ({len(data)} octets)")
         except Exception as e:
-            erreurs.append(f"{url.split('/')[2]}...{url.split('/')[-2]} -> {e}")
-    log(f"{tour} {annee} introuvable : " + " | ".join(erreurs[:2]))
+            erreurs.append(f"{url.split('/')[2]}/{url.split('/')[4]} -> {e}")
+    log(f"{tour} {annee} introuvable : " + " | ".join(erreurs))
     return None
 
 
