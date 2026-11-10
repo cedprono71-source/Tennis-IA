@@ -1,14 +1,79 @@
 """Pronostic d'un match : Elo + stats de service + simulateur."""
+import re
+import unicodedata
 from sqlalchemy import or_, func
 
 from db import SessionLocal
-from models import Player, Match, EloRating
+from models import Player, Match, EloRating, Tournament
 from elo import expected, W_SURFACE
 from simulator import calibrer, resume
 
 SERVE_AVG = {"atp": 0.645, "wta": 0.565}   # points gagnés au service, moyenne du circuit
 K_REGRESSION = 500                          # points "fictifs" ramenant vers la moyenne
 SURFACES = {"hard": "Hard", "clay": "Clay", "grass": "Grass", "carpet": "Carpet"}
+
+
+# ---------- surface et format du tournoi, déduits de l'historique ----------
+STOP = {"atp", "wta", "open", "masters", "tour", "presented", "by", "the", "of", "and",
+        "championships", "championship", "international", "internationals", "classic", "cup",
+        "series", "tennis", "grand", "slam", "trophy", "tournament", "for", "in", "de", "du", "la", "s"}
+ALIAS = [("french open", "roland garros"), ("bnp paribas", "indian wells"), ("miami open", "miami"),
+         ("mutua madrid", "madrid"), ("internazionali", "rome"), ("italian open", "rome"),
+         ("national bank", "canada"), ("canadian open", "canada"), ("rogers", "canada"),
+         ("western", "cincinnati"), ("atp finals", "tour finals"), ("wta finals", "tour finals"),
+         ("monte carlo", "monte carlo"), ("monte-carlo", "monte carlo")]
+CLAY = r"\b(?:roland|french open|monte.carlo|madrid|rome|italian|barcelona|hamburg|estoril|houston|bucharest|geneva|lyon|munich|marrakech|buenos|rio |santiago|bastad|gstaad|umag|kitzb|bogot|cordoba|parma|charleston|strasbourg|rabat|clay)"
+GRASS = r"\b(?:wimbledon|halle|queen|eastbourne|mallorca|hertogenbosch|newport|berlin|nottingham|birmingham|grass)"
+_TABLE = {}
+
+
+def _tokens(nom):
+    t = unicodedata.normalize("NFKD", nom or "").encode("ascii", "ignore").decode().lower()
+    t = re.sub(r"[^a-z0-9 ]", " ", t)
+    return [w for w in t.split() if w not in STOP and not w.isdigit()]
+
+
+def charger_table(s, tour):
+    if tour not in _TABLE:
+        vu = {}
+        q = s.query(Tournament.name, Tournament.surface, Tournament.level) \
+            .filter(Tournament.tour == tour).order_by(Tournament.id.desc())
+        for nom, surf, lvl in q:  # du plus récent au plus ancien : le récent gagne
+            tk = frozenset(_tokens(nom))
+            if tk and surf and tk not in vu:
+                vu[tk] = (surf, lvl)
+        _TABLE[tour] = list(vu.items())
+    return _TABLE[tour]
+
+
+def trouver_tournoi(table, nom_espn):
+    """(surface, niveau) du tournoi, ou (None, None). Pur : testable sans base."""
+    texte = nom_espn or ""
+    low = texte.lower()
+    for cle, canon in ALIAS:
+        if cle in low:
+            texte += " " + canon
+    tk = set(_tokens(texte))
+    best = None
+    for cand, (surf, lvl) in table:
+        if cand <= tk and (best is None or len(cand) > len(best[0])):
+            best = (cand, surf, lvl)
+    if best:
+        return best[1], best[2]
+    if re.search(CLAY, low):
+        return "Clay", None
+    if re.search(GRASS, low):
+        return "Grass", None
+    return None, None
+
+
+def auto_format(tour, tournoi):
+    """Surface et nombre de sets gagnants, déduits du nom du tournoi."""
+    with SessionLocal() as s:
+        table = charger_table(s, tour)
+    surf, lvl = trouver_tournoi(table, tournoi)
+    best_of = 5 if (tour == "atp" and lvl == "G") else 3
+    return surf or "Hard", best_of
 
 
 def trouver_joueur(s, tour, nom):
@@ -59,10 +124,16 @@ def stats_service(s, pid, surface, avg):
     return s_adj, r_adj, len(rows)
 
 
-def pronostic(tour, nom_a, nom_b, surface="Hard", best_of=3, ligne=None):
+def pronostic(tour, nom_a, nom_b, surface="Hard", best_of=3, ligne=None, tournoi=None):
     tour = tour.lower()
     if tour not in SERVE_AVG:
         return {"erreur": "tour doit etre atp ou wta"}
+    if surface.lower() == "auto" or not best_of:
+        surf_auto, bo_auto = auto_format(tour, tournoi or "")
+        if surface.lower() == "auto":
+            surface = surf_auto
+        if not best_of:
+            best_of = bo_auto
     surface = SURFACES.get(surface.lower(), "Hard")
     avg = SERVE_AVG[tour]
     with SessionLocal() as s:
