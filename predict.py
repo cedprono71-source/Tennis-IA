@@ -93,4 +93,3 @@ def pronostic(tour, nom_a, nom_b, surface="Hard", best_of=3, ligne=None):
         o = out["over"][str(ligne)]
         out["pronostic_ligne"] = {"ligne": ligne, "over": o, "under": round(1 - o, 4)}
     return out
-
