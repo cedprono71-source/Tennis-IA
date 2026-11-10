@@ -1,5 +1,7 @@
 import threading
-from fastapi import FastAPI
+from datetime import date
+from fastapi import FastAPI, Query
+from fastapi.responses import HTMLResponse
 from sqlalchemy import func
 from db import SessionLocal, init_db
 from models import EloRating, Player
@@ -10,9 +12,28 @@ init_db()
 ETAT = {"etat": "inactif", "journal": []}
 
 
-@app.get("/")
+@app.get("/", response_class=HTMLResponse)
 def accueil():
+    from page import PAGE
+    return PAGE
+
+
+@app.get("/health")
+def health():
     return {"statut": "ok"}
+
+
+@app.get("/api/calendrier")
+def calendrier(tour: str = "atp", date_: str = Query(None, alias="date"), brut: int = 0):
+    """Matchs du jour (ESPN). Exemple : /api/calendrier?tour=atp&date=2026-11-10"""
+    from espn import matchs_du_jour, brut as flux_brut
+    try:
+        jour = date.fromisoformat(date_) if date_ else date.today()
+        if brut:
+            return {"brut": flux_brut(tour, jour)}
+        return {"jour": str(jour), "matchs": matchs_du_jour(tour, jour)}
+    except Exception as e:  # noqa: BLE001
+        return {"erreur": repr(e)}
 
 
 def _log(msg):
@@ -42,6 +63,14 @@ def setup():
 @app.get("/setup/status")
 def setup_status():
     return ETAT
+
+
+@app.get("/match")
+def match(tour: str, a: str, b: str, surface: str = "Hard",
+          best_of: int = 3, ligne: float | None = None):
+    """Exemple : /match?tour=atp&a=Sinner&b=Alcaraz&surface=Hard&ligne=22.5"""
+    from predict import pronostic
+    return pronostic(tour, a, b, surface, best_of, ligne)
 
 
 @app.get("/top/{tour}")
