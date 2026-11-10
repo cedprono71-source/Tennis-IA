@@ -3,7 +3,8 @@ Peut être lancé en ligne de commande ou depuis le site (/setup)."""
 import urllib.request
 from pathlib import Path
 
-from db import SessionLocal, init_db
+from sqlalchemy import text
+from db import SessionLocal, init_db, engine
 from sackmann import import_year
 from elo import run_db
 
@@ -40,14 +41,31 @@ def telecharger(tour, annee, log):
     return None
 
 
+def elargir_colonnes():
+    """Agrandit des colonnes déjà créées trop petites (ignoré si impossible)."""
+    for table, col, typ in [("tournaments", "level", "VARCHAR(10)"),
+                            ("tournaments", "surface", "VARCHAR(20)"),
+                            ("matches", "surface", "VARCHAR(20)"),
+                            ("matches", "round", "VARCHAR(10)"),
+                            ("elo_ratings", "surface", "VARCHAR(20)"),
+                            ("players", "hand", "VARCHAR(5)"),
+                            ("players", "country", "VARCHAR(10)")]:
+        try:
+            with engine.begin() as c:
+                c.execute(text(f"ALTER TABLE {table} ALTER COLUMN {col} TYPE {typ}"))
+        except Exception:
+            pass
+
+
 def tout_faire(log=print):
     init_db()
+    elargir_colonnes()
     with SessionLocal() as s:
         for tour in REPOS:
             for a in ANNEES:
                 p = telecharger(tour, a, log)
                 if p:
-                    log(f"{tour} {a} : {import_year(s, tour, p)} matchs importes")
+                    log(f"{tour} {a} : {import_year(s, tour, p, log)} matchs importes")
     for tour in REPOS:
         log("Calcul des notes " + tour + "...")
         log(run_db(tour))
