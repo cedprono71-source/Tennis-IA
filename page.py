@@ -3,35 +3,53 @@ PAGE = r"""<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Pronostics Tennis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<meta name="theme-color" content="#0B1220">
 <style>
-:root{--bg:#f4f6f8;--card:#fff;--txt:#111827;--mut:#6b7280;--acc:#16a34a;--bd:#e5e7eb;--bar:#dbeafe;--bar2:#16a34a}
-@media (prefers-color-scheme:dark){:root{--bg:#0f1419;--card:#1a2129;--txt:#e5e7eb;--mut:#9ca3af;--acc:#22c55e;--bd:#2a333d;--bar:#1e3a5f;--bar2:#22c55e}}
-*{box-sizing:border-box}body{margin:0;font-family:system-ui,sans-serif;background:var(--bg);color:var(--txt)}
-header{position:sticky;top:0;background:var(--card);border-bottom:1px solid var(--bd);z-index:5;padding:10px 12px 6px}
-h1{font-size:18px;margin:0 0 8px}
-.days{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px}
-.day{flex:0 0 auto;min-width:52px;text-align:center;padding:6px 8px;border:1px solid var(--bd);border-radius:10px;font-size:12px;color:var(--mut);background:var(--card)}
-.day b{display:block;font-size:16px;color:var(--txt)}
-.day.on{background:var(--acc);border-color:var(--acc);color:#fff}.day.on b{color:#fff}
-.tabs{display:flex;gap:8px;margin-top:6px}
-.tab{flex:1;text-align:center;padding:8px;border:1px solid var(--bd);border-radius:10px;font-weight:600;background:var(--card)}
-.tab.on{background:var(--txt);color:var(--bg);border-color:var(--txt)}
-main{padding:10px 12px 40px;max-width:640px;margin:auto}
-h2{font-size:13px;color:var(--mut);text-transform:uppercase;letter-spacing:.04em;margin:16px 4px 6px}
-.m{background:var(--card);border:1px solid var(--bd);border-radius:12px;margin-bottom:8px;overflow:hidden}
-.row{display:flex;align-items:center;gap:10px;padding:10px 12px}
-.t{width:44px;font-size:13px;color:var(--mut);flex:0 0 auto}
-.p{flex:1;min-width:0;font-size:15px}.p div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pr{flex:0 0 auto;text-align:right;font-size:14px;color:var(--mut)}.pr div{white-space:nowrap}.pr .fav{color:var(--acc);font-weight:700}
-.w{font-weight:700}.sc{font-size:13px;color:var(--mut);text-align:right;flex:0 0 auto}
-.det{display:none;padding:0 12px 12px;border-top:1px solid var(--bd);font-size:14px}.m.open .det{display:block}
-.ctl{display:flex;gap:8px;margin:10px 0}.ctl select{flex:1;padding:8px;border-radius:8px;border:1px solid var(--bd);background:var(--bg);color:var(--txt);font-size:14px}
-.bar{display:flex;height:26px;border-radius:8px;overflow:hidden;margin:6px 0;background:var(--bar);font-size:13px;color:#fff}
-.bar span{display:flex;align-items:center;padding:0 8px;white-space:nowrap}.bar .a{background:var(--bar2)}.bar .b{margin-left:auto;color:var(--txt)}
-table{width:100%;border-collapse:collapse;margin-top:6px}td,th{padding:5px 4px;text-align:center;border-bottom:1px solid var(--bd);font-size:13px}th{color:var(--mut);font-weight:500}
-.mut{color:var(--mut);font-size:12px;margin-top:8px}.err{color:#dc2626;padding:8px 0}
-.kpis{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}.kpi{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:10px 12px}.kpi b{display:block;font-size:22px}.kpi span{font-size:12px;color:var(--mut)}
-.ok{color:var(--acc)}.ko{color:#dc2626}.empty{text-align:center;color:var(--mut);padding:40px 10px}
+:root{--bg:#0B1220;--card:#131C2E;--txt:#E8ECF4;--mut:#8A97AD;--acc:#C6F432;--acc-txt:#C6F432;--bd:#22304A;--bar:#22304A;
+--hard:#3B82F6;--clay:#D9733B;--grass:#4CAF50;--ok:#4ADE80;--ko:#F87171;
+--f1:'Barlow Condensed','Arial Narrow',system-ui,sans-serif;--f2:'Inter',system-ui,-apple-system,sans-serif}
+@media (prefers-color-scheme:light){:root{--bg:#F3F5F9;--card:#FFFFFF;--txt:#0B1220;--mut:#5B6577;--acc-txt:#5A7A00;--bd:#E1E6EF;--bar:#E1E6EF;--ok:#15803D;--ko:#DC2626}}
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--f2);background:var(--bg);color:var(--txt);font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
+header{position:sticky;top:0;background:var(--bg);z-index:5;padding:12px 12px 8px;border-bottom:1px solid var(--bd)}
+h1{font-family:var(--f1);font-weight:700;font-size:24px;letter-spacing:.03em;text-transform:uppercase;margin:0 0 10px}
+.days{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;scrollbar-width:none}.days::-webkit-scrollbar{display:none}
+.day{flex:0 0 auto;min-width:54px;text-align:center;padding:7px 8px;border:1px solid var(--bd);border-radius:12px;font-size:11px;font-weight:500;color:var(--mut);background:var(--card);text-transform:uppercase;letter-spacing:.04em}
+.day b{display:block;font-size:18px;font-weight:700;color:var(--txt);letter-spacing:0}
+.day.on{background:var(--acc);border-color:var(--acc);color:#0B1220}.day.on b{color:#0B1220}
+.tabs{display:flex;gap:8px;margin-top:2px}
+.tab{flex:1;text-align:center;padding:9px;border:1px solid var(--bd);border-radius:12px;font-family:var(--f1);font-weight:700;font-size:18px;letter-spacing:.06em;text-transform:uppercase;background:var(--card);color:var(--mut)}
+.tab.on{background:var(--acc);border-color:var(--acc);color:#0B1220}
+main{padding:6px 12px 48px;max-width:640px;margin:auto}
+h2{font-family:var(--f1);font-weight:700;font-size:16px;letter-spacing:.07em;text-transform:uppercase;color:var(--mut);margin:20px 4px 8px;display:flex;align-items:center}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px;flex:0 0 auto}
+.dot.Hard{background:var(--hard)}.dot.Clay{background:var(--clay)}.dot.Grass{background:var(--grass)}.dot.Carpet{background:var(--mut)}
+.m{background:var(--card);border:1px solid var(--bd);border-radius:16px;margin-bottom:10px;overflow:hidden}
+.row{display:flex;align-items:center;gap:12px;padding:14px 14px 12px}
+.t{width:42px;font-size:13px;font-weight:500;color:var(--mut);flex:0 0 auto}
+.p{flex:1;min-width:0;font-size:16px;font-weight:500;line-height:1.55}.p div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.w{font-weight:700}
+.pr{flex:0 0 auto;text-align:right;font-size:15px;font-weight:500;color:var(--mut);line-height:1.55}.pr div{white-space:nowrap}
+.pr .fav{color:var(--txt);font-weight:700}.pr .hot{color:var(--acc-txt)}
+.sc{font-size:13px;color:var(--mut);text-align:right;flex:0 0 auto;line-height:1.55}
+.mbar{height:3px;background:var(--bar)}.mbar i{display:block;height:100%;background:var(--acc)}
+.det{display:none;padding:0 14px 14px;border-top:1px solid var(--bd);font-size:14px}.m.open .det{display:block}
+.ctl{display:flex;gap:8px;margin:12px 0}
+.ctl select{flex:1;padding:10px;border-radius:10px;border:1px solid var(--bd);background:var(--bg);color:var(--txt);font-family:var(--f2);font-size:14px}
+.bar{display:flex;height:30px;border-radius:10px;overflow:hidden;margin:8px 0;background:var(--bar);font-size:13px;font-weight:600}
+.bar span{display:flex;align-items:center;padding:0 10px;white-space:nowrap}.bar .a{background:var(--acc);color:#0B1220}.bar .b{margin-left:auto;color:var(--txt)}
+table{width:100%;border-collapse:collapse;margin-top:8px}
+td,th{padding:7px 4px;text-align:center;border-bottom:1px solid var(--bd);font-size:14px}
+th{color:var(--mut);font-weight:500;font-family:var(--f1);font-size:14px;letter-spacing:.06em;text-transform:uppercase}
+.mut{color:var(--mut);font-size:12px;margin-top:8px;line-height:1.5}.err{color:var(--ko);padding:8px 0}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}
+.kpi{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:12px 14px}
+.kpi b{display:block;font-family:var(--f1);font-size:32px;font-weight:700;color:var(--acc-txt);line-height:1.1}
+.kpi span{font-size:12px;color:var(--mut)}
+.ok{color:var(--ok)}.ko{color:var(--ko)}
+.empty{text-align:center;color:var(--mut);padding:48px 10px}
 </style></head><body>
 <header><h1>🎾 Pronostics Tennis</h1><div class="days" id="days"></div>
 <div class="tabs"><div class="tab on" data-t="atp">ATP</div><div class="tab" data-t="wta">WTA</div><div class="tab" data-t="suivi">Suivi</div></div></header>
@@ -67,9 +85,10 @@ function charger(){
     main.innerHTML="";
     if(d.erreur){main.appendChild(el("div","err","Calendrier indisponible : "+d.erreur));return}
     if(!d.matchs.length){main.appendChild(el("div","empty","Aucun match ce jour-là."));return}
-    var cur=null;
+    var cur=null,surf={};
+    d.matchs.forEach(function(m){if(m.surface&&!surf[m.tournoi])surf[m.tournoi]=m.surface});
     d.matchs.forEach(function(m){
-      if(m.tournoi!==cur){cur=m.tournoi;main.appendChild(el("h2","",cur))}
+      if(m.tournoi!==cur){cur=m.tournoi;var h=el("h2","");if(surf[cur]){h.appendChild(el("span","dot "+surf[cur]))}h.appendChild(el("span","",cur));main.appendChild(h)}
       main.appendChild(carte(m));
     });
   }).catch(function(e){main.innerHTML="";main.appendChild(el("div","err","Erreur réseau"))});
@@ -118,8 +137,9 @@ function carte(m){
   row.appendChild(p);
   if(m.p_a!==null&&m.p_a!==undefined){
     var pr=el("div","pr");
-    pr.appendChild(el("div",m.p_a>=0.5?"fav":"",pct(m.p_a)+(m.ok===1?" ✅":m.ok===0?" ❌":"")));
-    pr.appendChild(el("div",m.p_a<0.5?"fav":"",pct(1-m.p_a)));
+    function cl(p){return(p>=0.5?"fav":"")+(p>=0.65?" hot":"")}
+    pr.appendChild(el("div",cl(m.p_a),pct(m.p_a)+(m.ok===1?" ✅":m.ok===0?" ❌":"")));
+    pr.appendChild(el("div",cl(1-m.p_a),pct(1-m.p_a)));
     row.appendChild(pr);
   }
   var sc=el("div","sc");
@@ -127,6 +147,7 @@ function carte(m){
     [0,1].forEach(function(i){sc.appendChild(el("div","",m.scores[i].join(" ")||"–"))});
   }else{sc.textContent=m.tour_tableau}
   row.appendChild(sc);c.appendChild(row);
+  if(m.p_a!==null&&m.p_a!==undefined){var mb=el("div","mbar");var f=el("i");f.style.width=(m.p_a*100)+"%";mb.appendChild(f);c.appendChild(mb)}
   var det=el("div","det");c.appendChild(det);var charge=false;
   row.onclick=function(){
     c.classList.toggle("open");
