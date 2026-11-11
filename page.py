@@ -97,7 +97,7 @@ function chargerSuivi(main){
       var n=el("div","p");n.appendChild(el("div",p.gagnant===0?"w":"",p.a));n.appendChild(el("div",p.gagnant===1?"w":"",p.b));row.appendChild(n);
       var q=el("div","pr");q.appendChild(el("div","",pct(p.p_a)+" / "+pct(1-p.p_a)));
       var l=el("div",p.ok_vainqueur?"ok":"ko",(p.ok_vainqueur?"✅ vainqueur":"❌ vainqueur"));q.appendChild(l);
-      if(p.ok_over!==null&&p.ok_over!==undefined){q.appendChild(el("div",p.ok_over?"ok":"ko",(p.ok_over?"✅ ":"❌ ")+p.total_jeux+" jeux (ligne "+p.ligne+")"))}
+      if(p.ok_over!==null&&p.ok_over!==undefined){q.appendChild(el("div",p.ok_over?"ok":"ko",(p.ok_over?"✅ ":"❌ ")+p.total_jeux+" jeux (sur "+p.ligne+")"))}
       row.appendChild(q);c.appendChild(row);main.appendChild(c);
     });
   }).catch(function(){main.innerHTML="";main.appendChild(el("div","err","Erreur réseau"))});
@@ -157,7 +157,7 @@ function afficher(res,d){
   var b=el("span","b",pct(pb)+" "+noms[1].split(" ").pop());bar.appendChild(a);bar.appendChild(b);res.appendChild(bar);
   res.appendChild(el("div","mut","Surface : "+d.surface+" · "+d.format));
   res.appendChild(el("div","mut","Jeux attendus : "+d.jeux_attendus+" · Service (pts gagnés) : "+d.points_au_service[noms[0]]+" / "+d.points_au_service[noms[1]]));
-  var t=el("table");var h=el("tr");["Ligne","Plus de","Moins de"].forEach(function(x){h.appendChild(el("th","",x))});t.appendChild(h);
+  var t=el("table");var h=el("tr");["Jeux","Plus de","Moins de"].forEach(function(x){h.appendChild(el("th","",x))});t.appendChild(h);
   Object.keys(d.over).forEach(function(l){var r=el("tr");r.appendChild(el("td","",l));r.appendChild(el("td","",pct(d.over[l])));r.appendChild(el("td","",pct(1-d.over[l])));t.appendChild(r)});
   res.appendChild(t);
   var s=el("table");var hs=el("tr");hs.appendChild(el("th","","Score en sets"));hs.appendChild(el("th","","Proba"));s.appendChild(hs);
