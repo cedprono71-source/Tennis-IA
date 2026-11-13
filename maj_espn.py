@@ -4,6 +4,7 @@ puis recalcule les notes Elo.
 Lancement : python maj_espn.py
 """
 import re
+import sys
 import time
 import unicodedata
 import zlib
@@ -12,7 +13,7 @@ from datetime import datetime, timedelta
 from sqlalchemy import func
 
 from db import SessionLocal, init_db
-from models import Match, Player, Tournament
+from models import EloRating, Match, Player, Tournament
 import espn
 from elo import run_db
 
@@ -114,7 +115,12 @@ def importer(s, tour, log=print):
     aujourdhui = datetime.now(espn.TZ).date()
     anciens = {(w, l) for w, l in s.query(Match.winner_id, Match.loser_id).filter(
         Match.tour == tour, Match.date >= debut - timedelta(days=21))}
-    vus, nouveaux, devines = set(), [], {}
+    # Joueurs connus de l'AUTRE circuit (import historique) : sert à écarter les matchs
+    # hommes/femmes qui arrivent dans le mauvais flux ESPN.
+    autre = "wta" if tour == "atp" else "atp"
+    autres = {norm(nm) for (nm,) in s.query(Player.name).filter(
+        Player.tour == autre, ~Player.id.like("%:espn:%"))}
+    vus, nouveaux, devines, ignores = set(), [], {}, 0
 
     def joueur(nom):
         k = norm(nom)
@@ -145,6 +151,10 @@ def importer(s, tour, log=print):
             if len(sc) != 2 or not sc[0] or not sc[1]:
                 continue
             nom_g, nom_p = (m["a"], m["b"]) if g == 0 else (m["b"], m["a"])
+            kg, kp = norm(nom_g), norm(nom_p)
+            if (kg not in joueurs and kg in autres) or (kp not in joueurs and kp in autres):
+                ignores += 1  # joueur d'un autre circuit : on n'importe pas
+                continue
             wid, lid = joueur(nom_g), joueur(nom_p)
             if (wid, lid) in anciens or (jour, wid, lid) in vus:
                 continue
@@ -167,7 +177,8 @@ def importer(s, tour, log=print):
         time.sleep(0.2)
         jour += timedelta(days=1)
 
-    log(f"{tour.upper()} : {n} nouveaux matchs ajoutes (du {debut} au {aujourdhui})")
+    log(f"{tour.upper()} : {n} nouveaux matchs ajoutes (du {debut} au {aujourdhui}), "
+        f"{ignores} ignores (autre circuit)")
     if nouveaux:
         extrait = sorted(set(nouveaux))
         log(f"{tour.upper()} : {len(extrait)} joueurs nouveaux ou noms non reconnus : "
@@ -178,8 +189,24 @@ def importer(s, tour, log=print):
     return n
 
 
+def nettoyer_espn(s, log=print):
+    """Supprime tout ce qui a été importé depuis ESPN (matchs, tournois, joueurs créés, notes liées)
+    pour repartir proprement. L'import historique (Sackmann) n'est pas touché."""
+    ids_matchs = s.query(Match.id).filter(Match.tourney_id.like("%-espn-%"))
+    s.query(EloRating).filter(EloRating.match_id.in_(ids_matchs)).delete(synchronize_session=False)
+    s.query(EloRating).filter(EloRating.player_id.like("%:espn:%")).delete(synchronize_session=False)
+    n = s.query(Match).filter(Match.tourney_id.like("%-espn-%")).delete(synchronize_session=False)
+    s.query(Tournament).filter(Tournament.id.like("%-espn-%")).delete(synchronize_session=False)
+    p = s.query(Player).filter(Player.id.like("%:espn:%")).delete(synchronize_session=False)
+    s.commit()
+    log(f"Nettoyage ESPN : {n} matchs et {p} joueurs supprimes")
+
+
 if __name__ == "__main__":
     init_db()
+    if "--nettoyer" in sys.argv:
+        with SessionLocal() as s:
+            nettoyer_espn(s, print)
     with SessionLocal() as s:
         for tour in ("atp", "wta"):
             corriger_surfaces(s, tour, print)
