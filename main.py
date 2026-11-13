@@ -13,28 +13,13 @@ init_db()
 ETAT = {"etat": "inactif", "journal": []}
 
 
-# ---------- tâche automatique : pronostics + résultats toutes les 15 min ----------
-def _boucle():
-    import suivi
-    time.sleep(20)
-    while True:
-        try:
-            suivi.cycle()
-        except Exception:  # noqa: BLE001
-            pass
-        time.sleep(900)
-
-
-@app.on_event("startup")
-def demarrer():
-    threading.Thread(target=_boucle, daemon=True).start()
-
-
+# ---------- tâche automatique ----------
+# Sur Vercel, aucune boucle de fond ne peut tourner : les pronostics et les
+# résultats sont mis à jour par GitHub Actions (suivi.cycle()), pas par ce site.
 @app.get("/api/cron")
 def cron():
-    """À appeler par ton cron (toutes les 10 min) : réveille le site et lance un tour."""
+    """Affiche seulement l'état du dernier tour (la mise à jour se fait via GitHub Actions)."""
     import suivi
-    threading.Thread(target=suivi.cycle, daemon=True).start()
     return {"statut": "ok", "dernier_tour": suivi.ETAT_CYCLE}
 
 
@@ -106,7 +91,8 @@ def _travail():
 
 @app.get("/setup")
 def setup():
-    """Lance l'import des matchs + le calcul Elo en arrière-plan."""
+    """Lance l'import des matchs + le calcul Elo en arrière-plan.
+    (Sur Vercel, préférer le lancer via GitHub Actions : voir le workflow.)"""
     if ETAT["etat"] == "en cours":
         return {"message": "deja en cours, ouvre /setup/status"}
     ETAT["etat"], ETAT["journal"] = "en cours", []
