@@ -106,16 +106,23 @@ def setup_status():
 
 
 @app.get("/top/{tour}")
-def top(tour: str, n: int = 20):
-    """Les n joueurs les mieux notés (tour = atp ou wta)."""
+def top(tour: str, n: int = 20, jours: int = 365):
+    """Les n joueurs les mieux notés, actifs sur les `jours` derniers jours (tour = atp ou wta)."""
+    from datetime import timedelta
     with SessionLocal() as s:
+        derniere = (s.query(func.max(EloRating.date))
+                    .join(Player, Player.id == EloRating.player_id)
+                    .filter(Player.tour == tour).scalar())
+        if derniere is None:
+            return []
+        limite = derniere - timedelta(days=jours)
         derniers = (s.query(func.max(EloRating.id))
                     .join(Player, Player.id == EloRating.player_id)
                     .filter(Player.tour == tour)
                     .group_by(EloRating.player_id).subquery())
         rows = (s.query(Player.name, EloRating.elo_global, EloRating.date)
                 .join(Player, Player.id == EloRating.player_id)
-                .filter(EloRating.id.in_(derniers))
+                .filter(EloRating.id.in_(derniers), EloRating.date >= limite)
                 .order_by(EloRating.elo_global.desc()).limit(n).all())
         return [{"joueur": r[0], "note": round(r[1]), "dernier_match": str(r[2])}
                 for r in rows]
