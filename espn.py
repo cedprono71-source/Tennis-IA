@@ -66,6 +66,11 @@ def matchs_du_jour(tour, jour: date):
             etiquette = (gi.get("slug", "") + gi.get("displayName", "")).lower()
             if "double" in etiquette:
                 continue
+            # Le flux peut mélanger hommes et femmes : on garde seulement le bon circuit.
+            femme = "women" in etiquette
+            homme = ("men" in etiquette) and not femme
+            if (tour == "atp" and femme) or (tour == "wta" and homme):
+                continue
             blocs += g.get("competitions") or []
         if not ev.get("groupings"):
             blocs = ev.get("competitions") or []
@@ -90,4 +95,3 @@ def matchs_du_jour(tour, jour: date):
 
 def brut(tour, jour: date, n=4000):
     return json.dumps(_get(tour, jour.strftime("%Y%m%d")))[:n]
-
