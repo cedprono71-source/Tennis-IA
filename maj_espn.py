@@ -21,9 +21,11 @@ ARGILE = ("roland", "rome", "italia", "italian", "madrid", "monte carlo", "barce
           "estoril", "geneva", "lyon", "marrakech", "bucharest", "munich", "houston", "buenos aires",
           "rio", "santiago", "cordoba", "gstaad", "bastad", "umag", "kitzbuhel", "bogota", "parma",
           "prague", "rabat", "strasbourg", "palermo", "lausanne", "warsaw", "bad gastein", "sao paulo",
-          "french open", "charleston", "bordeaux", "belgrade", "cagliari", "bucarest")
+          "french open", "charleston", "bordeaux", "belgrade", "cagliari", "bucarest",
+          "generali open", "nordea open", "auvergne rhone alpes")
 GAZON = ("wimbledon", "halle", "queen", "stuttgart", "hertogenbosch", "mallorca", "eastbourne",
-         "newport", "berlin", "bad homburg", "nottingham", "birmingham", "surbiton", "libema")
+         "newport", "berlin", "bad homburg", "nottingham", "birmingham", "surbiton", "libema",
+         "boss open", "hsbc championships", "terra wortmann")
 GRANDS_CHELEMS = ("wimbledon", "us open", "roland garros", "french open", "australian open")
 
 
@@ -52,13 +54,20 @@ def code_tour(txt):
 
 
 def charger_tournois(s, tour):
+    """Tournois de référence (import historique) : on exclut ceux créés depuis ESPN."""
     d = {}
     q = (s.query(Tournament.name, Tournament.surface, Tournament.level, Tournament.best_of)
-         .filter_by(tour=tour).order_by(Tournament.id))
+         .filter(Tournament.tour == tour, ~Tournament.id.like("%-espn-%"))
+         .order_by(Tournament.id))
     for nom, surf, lvl, bo in q:
         if nom and surf:
             d[norm(nom)] = (surf, lvl, bo)  # le plus récent écrase les anciens
     return d
+
+
+def contient(n, mots):
+    """Vrai si l'un des mots (ou expressions) apparaît en mots entiers dans n."""
+    return any(re.search(r"\b" + re.escape(w) + r"\b", n) for w in mots)
 
 
 def infos_tournoi(nom_espn, connus, tour):
@@ -67,15 +76,31 @@ def infos_tournoi(nom_espn, connus, tour):
     cands = [k for k in connus if k and (k in n or n in k)]
     if cands:
         return connus[max(cands, key=len)], "connu"
-    if any(w in n for w in ARGILE):
+    if contient(n, ARGILE):
         surf = "Clay"
-    elif any(w in n for w in GAZON):
+    elif contient(n, GAZON):
         surf = "Grass"
     else:
         surf = "Hard"
-    if any(w in n for w in GRANDS_CHELEMS):
+    if contient(n, GRANDS_CHELEMS):
         return (surf, "G", 5 if tour == "atp" else 3), "devine"
     return (surf, "A", 3), "devine"
+
+
+def corriger_surfaces(s, tour, log=print):
+    """Réapplique les règles de surface aux tournois déjà créés depuis ESPN."""
+    connus = charger_tournois(s, tour)
+    corriges = []
+    q = s.query(Tournament).filter(Tournament.tour == tour, Tournament.id.like("%-espn-%"))
+    for t in q.all():
+        (surf, niveau, bo), _ = infos_tournoi(t.name, connus, tour)
+        if surf != t.surface:
+            corriges.append(f"{t.name}: {t.surface} -> {surf}")
+            t.surface = surf
+            s.query(Match).filter(Match.tourney_id == t.id).update({"surface": surf})
+    s.commit()
+    if corriges:
+        log(f"{tour.upper()} : surfaces corrigees : " + " | ".join(corriges))
 
 
 def importer(s, tour, log=print):
@@ -157,8 +182,8 @@ if __name__ == "__main__":
     init_db()
     with SessionLocal() as s:
         for tour in ("atp", "wta"):
+            corriger_surfaces(s, tour, print)
             importer(s, tour, print)
     for tour in ("atp", "wta"):
         print(run_db(tour))
     print("TERMINE")
-
