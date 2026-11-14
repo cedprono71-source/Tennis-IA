@@ -1,8 +1,9 @@
+import glob
 import threading
 import time
 from datetime import date
 from fastapi import FastAPI, Query
-from fastapi.responses import HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from sqlalchemy import func
 from db import SessionLocal, init_db
 from models import EloRating, Player, Prediction
@@ -27,7 +28,13 @@ def cron():
 @app.get("/", response_class=HTMLResponse)
 def accueil():
     from page import PAGE
-    return PAGE
+    liens = ('<link rel="manifest" href="/manifest.json">'
+             '<link rel="icon" type="image/png" href="/icone-512.png">'
+             '<link rel="apple-touch-icon" href="/icone-512.png">'
+             '<meta name="theme-color" content="#0b1220">')
+    if "<head>" in PAGE:
+        return PAGE.replace("<head>", "<head>" + liens, 1)
+    return liens + PAGE
 
 
 @app.get("/health")
@@ -126,10 +133,9 @@ def top(tour: str, n: int = 20, jours: int = 365):
                 .order_by(EloRating.elo_global.desc()).limit(n).all())
         return [{"joueur": r[0], "note": round(r[1]), "dernier_match": str(r[2])}
                 for r in rows]
-import glob
-from fastapi.responses import FileResponse, JSONResponse
 
 
+# ---------- icône et manifest (raccourci écran d'accueil) ----------
 def _fichier_icone():
     trouves = glob.glob("t*chargement*.png")
     return trouves[0] if trouves else None
