@@ -535,8 +535,8 @@ font-size:13px;
 <div class="days" id="days"></div>
 
 <div class="tabs">
-<div class="tab on" data-t="accueil">Accueil</div>
-<div class="tab" data-t="atp">ATP</div>
+<div class="tab" data-t="accueil">Accueil</div>
+<div class="tab on" data-t="atp">ATP</div>
 <div class="tab" data-t="wta">WTA</div>
 <div class="tab" data-t="suivi">Suivi</div>
 </div>
@@ -548,7 +548,7 @@ font-size:13px;
 
 <script>
 var JOURS=["dim","lun","mar","mer","jeu","ven","sam"];
-var etat={tour:"accueil",jour:iso(new Date())};
+var etat={tour:"atp",jour:iso(new Date())};
 
 function iso(d){
 return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")
@@ -933,7 +933,6 @@ res.appendChild(el("div","mut","Basé sur l'Elo par surface et les statistiques 
 }
 
 buildDays();
-document.getElementById("days").style.display="none";
 charger();
 </script>
 </body>
