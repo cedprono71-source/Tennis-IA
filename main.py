@@ -25,6 +25,18 @@ def health():
     return {"statut": "ok"}
 
 
+_PAYS = {}
+
+
+def _pays(tour, nom):
+    k = (tour, nom)
+    if k not in _PAYS:
+        with SessionLocal() as s:
+            r = s.query(Player.country).filter(Player.tour == tour, Player.name.ilike(f"%{nom}%")).first()
+        _PAYS[k] = r[0] if r else None
+    return _PAYS[k]
+
+
 @app.get("/api/calendrier")
 def calendrier(tour: str = "atp", date_: str = Query(None, alias="date"), brut: int = 0):
     """Matchs du jour jouables chez un bookmaker français. Ex : /api/calendrier?tour=atp&date=2026-11-10"""
@@ -46,7 +58,17 @@ def calendrier(tour: str = "atp", date_: str = Query(None, alias="date"), brut: 
                 continue  # non coté en France : retiré
             p = preds.get(f"{tour}|{jour}|{m['a']}|{m['b']}")
             m["p_a"] = p.p_a if p else None
-            m["surface"] = p.surface if p else None
+            try:
+                from predict import auto_format
+                m["surface"] = p.surface if p else auto_format(tour, m["tournoi"])[0]
+            except Exception:  # noqa: BLE001
+                m["surface"] = None
+            m["pays_a"], m["pays_b"] = _pays(tour, m["a"]), _pays(tour, m["b"])
+            m["opp"] = m["valeur"] = None
+            if c and m["p_a"] is not None:  # opportunité : valeur calculée, cotes jamais envoyées
+                va, vb = m["p_a"] * c["a"]["cote"] - 1, (1 - m["p_a"]) * c["b"]["cote"] - 1
+                if max(va, vb) >= 0.05:
+                    m["opp"], m["valeur"] = (0 if va >= vb else 1), round(max(va, vb), 3)
             m["ok"] = p.ok_vainqueur if p else None
             m["lignes"] = [t["ligne"] for t in c["totaux"]] if c else None
             out.append(m)
