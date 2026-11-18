@@ -48,11 +48,7 @@ def calendrier(tour: str = "atp", date_: str = Query(None, alias="date"), brut: 
             m["p_a"] = p.p_a if p else None
             m["surface"] = p.surface if p else None
             m["ok"] = p.ok_vainqueur if p else None
-            m["cotes"] = c
-            m["valeur_a"] = m["valeur_b"] = None
-            if c and m["p_a"] is not None:
-                m["valeur_a"] = round(m["p_a"] * c["a"]["cote"] - 1, 3)
-                m["valeur_b"] = round((1 - m["p_a"]) * c["b"]["cote"] - 1, 3)
+            m["lignes"] = [t["ligne"] for t in c["totaux"]] if c else None
             out.append(m)
         return {"jour": str(jour), "filtre": filtre, "matchs": out}
     except Exception as e:  # noqa: BLE001
