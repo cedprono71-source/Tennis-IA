@@ -16,4 +16,4 @@ jobs:
       - run: python maj_tennis.py
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+    
