@@ -7,6 +7,7 @@ from db import SessionLocal
 from models import Prediction
 import espn
 import predict
+import cotes
 
 _VERROU = threading.Lock()
 ETAT_CYCLE = {"dernier": None, "resume": "jamais lance"}
@@ -47,9 +48,13 @@ def creer_pronostics(max_nouveaux=25):
                     matchs = espn.matchs_du_jour(tour, jour)
                 except Exception:
                     continue
+                filtrer = cotes.table_remplie(s)
+                liste = cotes.charger(s, tour, jour) if filtrer else []
                 for m in matchs:
                     if m["etat"] == "post":
                         continue
+                    if filtrer and not cotes.chercher(liste, m["a"], m["b"]):
+                        continue  # pas coté chez un bookmaker français : on l'ignore
                     k = cle(tour, jour, m["a"], m["b"])
                     if s.query(Prediction.id).filter_by(cle=k).first():
                         continue
@@ -167,4 +172,3 @@ def stats():
             "ok_vainqueur": p.ok_vainqueur, "ok_over": p.ok_over,
         } for p in derniers]
         return out
-
