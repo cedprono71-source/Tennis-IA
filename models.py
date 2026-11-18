@@ -1,4 +1,4 @@
-from sqlalchemy import String, Integer, Float, Date, ForeignKey, UniqueConstraint, Index
+from sqlalchemy import String, Integer, Float, Date, DateTime, Text, ForeignKey, UniqueConstraint, Index
 from sqlalchemy.orm import Mapped, mapped_column
 from db import Base
 
@@ -90,3 +90,14 @@ class Prediction(Base):
     total_jeux: Mapped[int | None] = mapped_column(Integer, nullable=True)
     ok_vainqueur: Mapped[int | None] = mapped_column(Integer, nullable=True)
     ok_over: Mapped[int | None] = mapped_column(Integer, nullable=True)
+
+
+class Cote(Base):
+    """Cotes des bookmakers français (The Odds API) pour un match."""
+    __tablename__ = "cotes_fr"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    event_id: Mapped[str] = mapped_column(String, unique=True, index=True)
+    tour: Mapped[str] = mapped_column(String(5))          # atp / wta / meta
+    debut: Mapped[object] = mapped_column(DateTime, nullable=True, index=True)  # UTC
+    maj: Mapped[object] = mapped_column(DateTime)
+    donnees: Mapped[str] = mapped_column(Text)            # JSON
