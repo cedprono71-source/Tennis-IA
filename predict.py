@@ -124,7 +124,7 @@ def stats_service(s, pid, surface, avg):
     return s_adj, r_adj, len(rows)
 
 
-def pronostic(tour, nom_a, nom_b, surface="Hard", best_of=3, ligne=None, tournoi=None):
+def pronostic(tour, nom_a, nom_b, surface="Hard", best_of=3, ligne=None, tournoi=None, lignes=None):
     tour = tour.lower()
     if tour not in SERVE_AVG:
         return {"erreur": "tour doit etre atp ou wta"}
@@ -151,7 +151,8 @@ def pronostic(tour, nom_a, nom_b, surface="Hard", best_of=3, ligne=None, tournoi
     pa = min(max(avg + (s_a - avg) - (r_b - (1 - avg)), 0.45), 0.85)
     pb = min(max(avg + (s_b - avg) - (r_a - (1 - avg)), 0.45), 0.85)
     pa_c, pb_c = calibrer(pa, pb, p_elo, best_of)  # cale la proba de victoire sur l'Elo
-    lignes = [ligne - 1, ligne, ligne + 1] if ligne is not None else None
+    if lignes is None and ligne is not None:
+        lignes = [ligne - 1, ligne, ligne + 1]
     out = resume(pa_c, pb_c, best_of, lignes)
     out.update({
         "match": f"{A.name} vs {B.name}", "surface": surface, "format": f"{best_of} sets gagnants" if best_of == 5 else "3 sets",
