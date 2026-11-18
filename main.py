@@ -1,12 +1,11 @@
-import glob
 import threading
-import time
 from datetime import date
 from fastapi import FastAPI, Query
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse
 from sqlalchemy import func
 from db import SessionLocal, init_db
 from models import EloRating, Player, Prediction
+import cotes as cotes_fr
 
 app = FastAPI(title="Pronostics Tennis")
 init_db()
@@ -14,27 +13,11 @@ init_db()
 ETAT = {"etat": "inactif", "journal": []}
 
 
-# ---------- tâche automatique ----------
-# Sur Vercel, aucune boucle de fond ne peut tourner : les pronostics et les
-# résultats sont mis à jour par GitHub Actions (suivi.cycle()), pas par ce site.
-@app.get("/api/cron")
-def cron():
-    """Affiche seulement l'état du dernier tour (la mise à jour se fait via GitHub Actions)."""
-    import suivi
-    return {"statut": "ok", "dernier_tour": suivi.ETAT_CYCLE}
-
-
 # ---------- pages ----------
 @app.get("/", response_class=HTMLResponse)
 def accueil():
     from page import PAGE
-    liens = ('<link rel="manifest" href="/manifest.json">'
-             '<link rel="icon" type="image/png" href="/icone-512.png">'
-             '<link rel="apple-touch-icon" href="/icone-512.png">'
-             '<meta name="theme-color" content="#0b1220">')
-    if "<head>" in PAGE:
-        return PAGE.replace("<head>", "<head>" + liens, 1)
-    return liens + PAGE
+    return PAGE
 
 
 @app.get("/health")
@@ -44,7 +27,7 @@ def health():
 
 @app.get("/api/calendrier")
 def calendrier(tour: str = "atp", date_: str = Query(None, alias="date"), brut: int = 0):
-    """Matchs du jour (ESPN) + pronostic enregistré. Ex : /api/calendrier?tour=atp&date=2026-11-10"""
+    """Matchs du jour jouables chez un bookmaker français. Ex : /api/calendrier?tour=atp&date=2026-11-10"""
     from espn import matchs_du_jour, brut as flux_brut
     try:
         jour = date.fromisoformat(date_) if date_ else date.today()
@@ -54,12 +37,24 @@ def calendrier(tour: str = "atp", date_: str = Query(None, alias="date"), brut: 
         with SessionLocal() as s:
             preds = {p.cle: p for p in s.query(Prediction).filter(
                 Prediction.jour == jour, Prediction.tour == tour)}
+            filtre = cotes_fr.table_remplie(s)
+            liste = cotes_fr.charger(s, tour, jour) if filtre else []
+        out = []
         for m in matchs:
+            c = cotes_fr.chercher(liste, m["a"], m["b"]) if filtre else None
+            if filtre and not c:
+                continue  # non coté en France : retiré
             p = preds.get(f"{tour}|{jour}|{m['a']}|{m['b']}")
             m["p_a"] = p.p_a if p else None
             m["surface"] = p.surface if p else None
             m["ok"] = p.ok_vainqueur if p else None
-        return {"jour": str(jour), "matchs": matchs}
+            m["cotes"] = c
+            m["valeur_a"] = m["valeur_b"] = None
+            if c and m["p_a"] is not None:
+                m["valeur_a"] = round(m["p_a"] * c["a"]["cote"] - 1, 3)
+                m["valeur_b"] = round((1 - m["p_a"]) * c["b"]["cote"] - 1, 3)
+            out.append(m)
+        return {"jour": str(jour), "filtre": filtre, "matchs": out}
     except Exception as e:  # noqa: BLE001
         return {"erreur": repr(e)}
 
@@ -75,10 +70,11 @@ def api_suivi():
 
 @app.get("/match")
 def match(tour: str, a: str, b: str, surface: str = "auto", best_of: int = 0,
-          ligne: float | None = None, tournoi: str | None = None):
+          ligne: float | None = None, tournoi: str | None = None, lignes: str | None = None):
     """Ex : /match?tour=atp&a=Sinner&b=Alcaraz&tournoi=Paris Masters (surface et format automatiques)"""
     from predict import pronostic
-    return pronostic(tour, a, b, surface, best_of, ligne, tournoi)
+    liste = [float(x) for x in lignes.split(",") if x] if lignes else None
+    return pronostic(tour, a, b, surface, best_of, ligne, tournoi, liste)
 
 
 # ---------- import initial des matchs historiques ----------
@@ -98,8 +94,7 @@ def _travail():
 
 @app.get("/setup")
 def setup():
-    """Lance l'import des matchs + le calcul Elo en arrière-plan.
-    (Sur Vercel, préférer le lancer via GitHub Actions : voir le workflow.)"""
+    """Lance l'import des matchs + le calcul Elo en arrière-plan."""
     if ETAT["etat"] == "en cours":
         return {"message": "deja en cours, ouvre /setup/status"}
     ETAT["etat"], ETAT["journal"] = "en cours", []
@@ -113,46 +108,16 @@ def setup_status():
 
 
 @app.get("/top/{tour}")
-def top(tour: str, n: int = 20, jours: int = 365):
-    """Les n joueurs les mieux notés, actifs sur les `jours` derniers jours (tour = atp ou wta)."""
-    from datetime import timedelta
+def top(tour: str, n: int = 20):
+    """Les n joueurs les mieux notés (tour = atp ou wta)."""
     with SessionLocal() as s:
-        derniere = (s.query(func.max(EloRating.date))
-                    .join(Player, Player.id == EloRating.player_id)
-                    .filter(Player.tour == tour).scalar())
-        if derniere is None:
-            return []
-        limite = derniere - timedelta(days=jours)
         derniers = (s.query(func.max(EloRating.id))
                     .join(Player, Player.id == EloRating.player_id)
                     .filter(Player.tour == tour)
                     .group_by(EloRating.player_id).subquery())
         rows = (s.query(Player.name, EloRating.elo_global, EloRating.date)
                 .join(Player, Player.id == EloRating.player_id)
-                .filter(EloRating.id.in_(derniers), EloRating.date >= limite)
+                .filter(EloRating.id.in_(derniers))
                 .order_by(EloRating.elo_global.desc()).limit(n).all())
         return [{"joueur": r[0], "note": round(r[1]), "dernier_match": str(r[2])}
                 for r in rows]
-
-
-# ---------- icône et manifest (raccourci écran d'accueil) ----------
-def _fichier_icone():
-    trouves = glob.glob("t*chargement*.png")
-    return trouves[0] if trouves else None
-
-
-@app.get("/icone-512.png", include_in_schema=False)
-def icone_512():
-    f = _fichier_icone()
-    if not f:
-        return JSONResponse({"erreur": "icone introuvable"}, status_code=404)
-    return FileResponse(f)
-
-
-@app.get("/manifest.json", include_in_schema=False)
-def manifest():
-    return JSONResponse({
-        "name": "Pronostics Tennis", "short_name": "Tennis",
-        "start_url": "/", "display": "standalone",
-        "background_color": "#0b1220", "theme_color": "#0b1220",
-        "icons": [{"src": "/icone-512.png", "sizes": "512x512", "type": "image/png"}]})
