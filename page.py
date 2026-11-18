@@ -32,14 +32,14 @@ h2{font-family:var(--f1);font-weight:700;font-size:16px;letter-spacing:.07em;tex
 .p{flex:1;min-width:0;font-size:16px;font-weight:500;line-height:1.55}.p div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .w{font-weight:700}
 .pr{flex:0 0 auto;text-align:right;font-size:15px;font-weight:500;color:var(--mut);line-height:1.55}.pr div{white-space:nowrap}
-.pr .fav{color:var(--txt);font-weight:700}.pr .hot{color:var(--acc-txt)}
+.pr .hi{color:var(--acc-txt);font-weight:700}.hot{background:var(--acc);color:#0B1220!important;font-weight:700;border-radius:8px;padding:0 7px;width:fit-content;margin-left:auto}
 .sc{font-size:13px;color:var(--mut);text-align:right;flex:0 0 auto;line-height:1.55}
 .mbar{height:3px;background:var(--bar)}.mbar i{display:block;height:100%;background:var(--acc)}
 .det{display:none;padding:0 14px 14px;border-top:1px solid var(--bd);font-size:14px}.m.open .det{display:block}
 .ctl{display:flex;gap:8px;margin:12px 0}
 .ctl select{flex:1;padding:10px;border-radius:10px;border:1px solid var(--bd);background:var(--bg);color:var(--txt);font-family:var(--f2);font-size:14px}
 .bar{display:flex;height:30px;border-radius:10px;overflow:hidden;margin:8px 0;background:var(--bar);font-size:13px;font-weight:600}
-.bar span{display:flex;align-items:center;padding:0 10px;white-space:nowrap}.bar .a{background:var(--acc);color:#0B1220}.bar .b{margin-left:auto;color:var(--txt)}
+.bar span{display:flex;align-items:center;padding:0 10px;white-space:nowrap}.bar .a{color:var(--txt)}.bar .b{flex:1;justify-content:flex-end;color:var(--txt)}.bar .hi{background:var(--acc);color:#0B1220}
 table{width:100%;border-collapse:collapse;margin-top:8px}
 td,th{padding:7px 4px;text-align:center;border-bottom:1px solid var(--bd);font-size:14px}
 th{color:var(--mut);font-weight:500;font-family:var(--f1);font-size:14px;letter-spacing:.06em;text-transform:uppercase}
@@ -48,7 +48,7 @@ th{color:var(--mut);font-weight:500;font-family:var(--f1);font-size:14px;letter-
 .kpi{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:12px 14px}
 .kpi b{display:block;font-family:var(--f1);font-size:32px;font-weight:700;color:var(--acc-txt);line-height:1.1}
 .kpi span{font-size:12px;color:var(--mut)}
-.val{color:var(--acc-txt);font-size:12px;font-weight:700}.sm{font-size:11px;color:var(--mut);font-weight:400}td.val .pc{color:var(--acc-txt);font-weight:700}
+.val{color:var(--acc-txt);font-size:12px;font-weight:700}.sm{font-size:11px;color:var(--mut);font-weight:400}td.hi{color:var(--acc-txt);font-weight:700}td.hot{background:none;color:var(--acc-txt)!important;font-weight:800}
 .ok{color:var(--ok)}.ko{color:var(--ko)}
 .empty{text-align:center;color:var(--mut);padding:48px 10px}
 </style></head><body>
@@ -61,6 +61,7 @@ var etat={tour:"atp",jour:iso(new Date())};
 function iso(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
 function el(tag,cls,txt){var e=document.createElement(tag);if(cls)e.className=cls;if(txt!==undefined)e.textContent=txt;return e}
 function pct(x){return Math.round(x*100)+"%"}
+function cl(p){return(p>0.5?"hi":"")+(p>=0.65?" hot":"")}
 
 function buildDays(){
   var box=document.getElementById("days");box.innerHTML="";
@@ -139,11 +140,8 @@ function carte(m){
   row.appendChild(p);
   if(m.p_a!==null&&m.p_a!==undefined){
     var pr=el("div","pr");
-    function cl(p){return(p>=0.5?"fav":"")+(p>=0.65?" hot":"")}
     pr.appendChild(el("div",cl(m.p_a),pct(m.p_a)+(m.ok===1?" ✅":m.ok===0?" ❌":"")));
     pr.appendChild(el("div",cl(1-m.p_a),pct(1-m.p_a)));
-    var vm=Math.max(m.valeur_a||-1,m.valeur_b||-1);
-    if(vm>=0.05){pr.appendChild(el("div","val","value +"+Math.round(vm*100)+"%"))}
     row.appendChild(pr);
   }
   var sc=el("div","sc");
@@ -169,7 +167,7 @@ function formulaire(det,m){
   function go(){
     res.innerHTML="";res.appendChild(el("div","mut","Calcul en cours…"));
     var u="/match?tour="+m.tour+"&a="+encodeURIComponent(m.a)+"&b="+encodeURIComponent(m.b)+"&surface="+sf.value+"&best_of="+bo.value+"&tournoi="+encodeURIComponent(m.tournoi||"");
-    if(m.cotes&&m.cotes.totaux.length){u+="&lignes="+m.cotes.totaux.map(function(t){return t.ligne}).join(",")}
+    if(m.lignes&&m.lignes.length){u+="&lignes="+m.lignes.join(",")}
     fetch(u).then(function(r){return r.json()}).then(function(d){afficher(res,d,m)}).catch(function(){res.innerHTML="";res.appendChild(el("div","err","Erreur réseau"))});
   }
   sf.onchange=go;bo.onchange=go;go();
@@ -179,20 +177,17 @@ function afficher(res,d,m){
   res.innerHTML="";
   if(d.erreur){res.appendChild(el("div","err",d.erreur));return}
   var noms=Object.keys(d.proba_victoire_elo);var pa=d.proba_victoire_elo[noms[0]],pb=d.proba_victoire_elo[noms[1]];
-  var bar=el("div","bar");var a=el("span","a",noms[0].split(" ").pop()+" "+pct(pa));a.style.width=(pa*100)+"%";
-  var b=el("span","b",pct(pb)+" "+noms[1].split(" ").pop());bar.appendChild(a);bar.appendChild(b);res.appendChild(bar);
+  var bar=el("div","bar");var a=el("span","a"+(pa>0.5?" hi":""),noms[0].split(" ").pop()+" "+pct(pa));a.style.width=(pa*100)+"%";
+  var b=el("span","b"+(pb>0.5?" hi":""),pct(pb)+" "+noms[1].split(" ").pop());bar.appendChild(a);bar.appendChild(b);res.appendChild(bar);
   res.appendChild(el("div","mut","Surface : "+d.surface+" · "+d.format));
   res.appendChild(el("div","mut","Jeux attendus : "+d.jeux_attendus+" · Service (pts gagnés) : "+d.points_au_service[noms[0]]+" / "+d.points_au_service[noms[1]]));
-  var cc=m.cotes;
-  if(cc){res.appendChild(el("div","mut","Cotes : "+noms[0].split(" ").pop()+" "+cc.a.cote+" ("+cc.a.book+") · "+noms[1].split(" ").pop()+" "+cc.b.cote+" ("+cc.b.book+")"))}
-  function cell(p,c){var v=p*c.cote-1;var td=el("td",v>=0.05?"val":"");td.appendChild(el("div","pc",pct(p)));td.appendChild(el("div","sm",c.cote+" "+c.book));return td}
-  var lignes=[];
-  if(cc){cc.totaux.forEach(function(t){var po=d.over[t.ligne.toFixed(1)];if(po!==undefined){lignes.push([t,po])}})}
-  if(lignes.length){
+  var cles=Object.keys(d.over);
+  if(m.lignes){cles=m.lignes.map(function(l){return l.toFixed(1)}).filter(function(k){return d.over[k]!==undefined})}
+  if(cles.length){
     var t=el("table");var h=el("tr");["Jeux","Plus de","Moins de"].forEach(function(x){h.appendChild(el("th","",x))});t.appendChild(h);
-    lignes.forEach(function(x){var r=el("tr");r.appendChild(el("td","",String(x[0].ligne)));r.appendChild(cell(x[1],x[0].over));r.appendChild(cell(1-x[1],x[0].under));t.appendChild(r)});
+    cles.forEach(function(k){var r=el("tr");r.appendChild(el("td","",k));r.appendChild(el("td",cl(d.over[k]),pct(d.over[k])));r.appendChild(el("td",cl(1-d.over[k]),pct(1-d.over[k])));t.appendChild(r)});
     res.appendChild(t);
-  }else{res.appendChild(el("div","mut","Plus/moins de jeux : pas de cote chez les bookmakers français pour ce match."))}
+  }else{res.appendChild(el("div","mut","Plus/moins de jeux : non proposé en France pour ce match."))}
   var s=el("table");var hs=el("tr");hs.appendChild(el("th","","Score en sets"));hs.appendChild(el("th","","Proba"));s.appendChild(hs);
   Object.keys(d.sets).forEach(function(k){var r=el("tr");r.appendChild(el("td","",k));r.appendChild(el("td","",pct(d.sets[k])));s.appendChild(r)});
   res.appendChild(s);
