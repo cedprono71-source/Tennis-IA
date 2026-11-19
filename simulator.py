@@ -125,7 +125,7 @@ def resume(pa, pb, best_of=3, lignes=None):
     esp = sum(g * p for g, p in games.items())
     if lignes is None:
         base = int(esp)
-        lignes = [base - 2 + 0.5, base - 1 + 0.5, base + 0.5, base + 1.5, base + 2.5]
+        lignes = [base - 3.5 + k for k in range(9)]
     over = {str(l): round(sum(p for g, p in games.items() if g > l), 4) for l in lignes}
     return {
         "proba_A": round(pw, 4),
@@ -133,4 +133,3 @@ def resume(pa, pb, best_of=3, lignes=None):
         "over": over,
         "sets": {f"{a}-{b}": round(p, 4) for (a, b), p in sorted(scores.items())},
     }
-
