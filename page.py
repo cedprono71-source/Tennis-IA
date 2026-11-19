@@ -23,9 +23,7 @@ margin:0;background:var(--bg);color:var(--t);
 font-family:Inter,system-ui,sans-serif;
 -webkit-tap-highlight-color:transparent;
 }
-.hero{
-height:220px;position:relative;overflow:hidden;
-background:
+.hero{height:210px;position:relative;overflow:hidden;background:#030817 url('/tennis-ia-header(1).jpg') center center/100% 100% no-repeat;border-bottom:1px solid #174c81}
 radial-gradient(ellipse at 15% 35%,#0874e755,transparent 45%),
 radial-gradient(ellipse at 85% 25%,#0755c955,transparent 50%),
 linear-gradient(180deg,#02091b,#061631 65%,#030817);
