@@ -153,7 +153,9 @@ def pronostic(tour, nom_a, nom_b, surface="Hard", best_of=3, ligne=None, tournoi
     pa_c, pb_c = calibrer(pa, pb, p_elo, best_of)  # cale la proba de victoire sur l'Elo
     if lignes is None and ligne is not None:
         lignes = [ligne - 1, ligne, ligne + 1]
-    out = resume(pa_c, pb_c, best_of, lignes)
+    out = resume(pa_c, pb_c, best_of, None)  # 9 lignes autour du total attendu
+    if lignes:
+        out["over"].update(resume(pa_c, pb_c, best_of, lignes)["over"])
     out.update({
         "match": f"{A.name} vs {B.name}", "surface": surface, "format": f"{best_of} sets gagnants" if best_of == 5 else "3 sets",
         "proba_victoire_elo": {A.name: round(p_elo, 4), B.name: round(1 - p_elo, 4)},
