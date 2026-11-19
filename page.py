@@ -1,4 +1,3 @@
-
 PAGE = r"""<!doctype html>
 <html lang="fr">
 <head>
@@ -24,9 +23,9 @@ font-family:Inter,system-ui,sans-serif;
 -webkit-tap-highlight-color:transparent;
 }
 
-/* NOUVEAU HEADER TENNIS-IA */
+/* HEADER TENNIS-IA (réduit) */
 .hero{
-height:245px;
+height:150px;
 position:relative;
 overflow:hidden;
 background:
@@ -40,7 +39,7 @@ border-bottom:1px solid #168aff;
 content:"";
 position:absolute;
 left:-15%;
-top:45px;
+top:28px;
 width:130%;
 height:4px;
 background:linear-gradient(90deg,transparent,#168aff,#a6ff00,#168aff,transparent);
@@ -61,10 +60,10 @@ position:absolute;
 z-index:2;
 left:0;
 right:0;
-top:75px;
+top:48px;
 text-align:center;
 margin:0;
-font:italic 900 clamp(43px,10vw,65px)/1 "Exo 2",Inter,sans-serif;
+font:italic 900 clamp(36px,9vw,54px)/1 "Exo 2",Inter,sans-serif;
 letter-spacing:-2px;
 text-shadow:0 4px 20px #000;
 }
@@ -77,7 +76,7 @@ border-radius:23px;
 box-shadow:inset 0 1px 5px #83caff22,0 5px 20px #0007;
 }
 .kp{
-margin:-27px 12px 22px;position:relative;z-index:3;
+margin:-22px 12px 14px;position:relative;z-index:3;
 display:flex;padding:13px 5px;
 border:1.5px solid #78caff;
 background:linear-gradient(110deg,#0b2344,#020b1c);
@@ -114,7 +113,7 @@ box-shadow:0 0 15px #a6ff0099,0 0 30px #a6ff0033;
 }
 .days{
 display:flex;gap:7px;overflow-x:auto;
-padding:16px 12px;scrollbar-width:none;
+padding:10px 12px;scrollbar-width:none;
 }
 .days::-webkit-scrollbar{display:none}
 .d{
@@ -144,8 +143,8 @@ content:"";height:1px;flex:1;margin-left:12px;
 background:linear-gradient(90deg,#376b9d,transparent);
 }
 .m{
-position:relative;margin:18px 0 17px;
-padding:14px 11px 13px;
+position:relative;margin:12px 0;
+padding:10px 9px;
 border:1.5px solid #4385b6;
 background:linear-gradient(140deg,#10294b 0%,#07172e 65%,#061126 100%);
 box-shadow:0 0 12px #168aff22,inset 0 0 18px #168aff12;
@@ -154,7 +153,7 @@ border-radius:25px;
 .top{
 display:flex;align-items:center;justify-content:space-between;
 gap:5px;font-size:14px;font-weight:700;
-margin-bottom:13px;padding:0 2px;
+margin-bottom:10px;padding:0 2px;
 }
 .top span{color:#d0e3fa;text-align:right;font-size:12px}
 .pick{
@@ -175,40 +174,40 @@ display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2.8fr) minmax(0,1fr);
 gap:7px;align-items:center;
 }
 .pl{
-text-align:center;font:800 15px/1.2 "Exo 2";
+text-align:center;font:800 13px/1.2 "Exo 2";
 overflow-wrap:anywhere;
 }
 .av{
-width:100%;max-width:76px;height:72px;
-margin:0 auto 9px;border-radius:19px;
+width:100%;max-width:46px;height:46px;
+margin:0 auto 5px;border-radius:50%;
 background:linear-gradient(145deg,#112c50,#07162e);
 border:1px solid #31577e;
 display:flex;align-items:center;justify-content:center;
-color:#9cc5f0;font:800 23px "Exo 2";
+color:#9cc5f0;font:800 16px "Exo 2";
 box-shadow:inset 0 0 15px #168aff16;
 }
-.fl{font-size:24px;margin-top:7px}
+.fl{font-size:18px;margin-top:3px}
 .mid{
 background:linear-gradient(145deg,#020a19,#061329);
 border:1px solid #193c60;
-border-radius:20px;padding:13px 8px;
+border-radius:20px;padding:8px 6px;
 box-shadow:inset 0 0 15px #0008;
 }
 .pc{display:flex}
 .pc div{
 flex:1;text-align:center;
-font:800 clamp(27px,7vw,39px) "Exo 2";
+font:800 clamp(22px,6vw,30px) "Exo 2";
 }
 .pc div+div{border-left:1px solid #375575}
 .pc small{
-display:block;font:600 13px Inter;color:#e2ebf8;
+display:block;font:600 12px Inter;color:#e2ebf8;
 }
 .pc .w{
 color:var(--l);text-shadow:0 0 14px #a6ff0055;
 }
 .bar{
-height:12px;border-radius:12px;
-background:#294a73;margin-top:13px;
+height:9px;border-radius:12px;
+background:#294a73;margin-top:8px;
 position:relative;overflow:hidden;
 }
 .bar i{
@@ -270,17 +269,17 @@ align-items:center;padding:16px;
 .sw input{width:24px;height:24px}
 
 @media(max-width:380px){
-.hero{height:210px}
-.hero h1{font-size:43px;top:75px}
+.hero{height:130px}
+.hero h1{font-size:36px;top:40px}
 .kp div{font-size:10px;padding:2px 4px}
 .kp b{font-size:20px}
 .tab{font-size:15px}
 .g3{grid-template-columns:minmax(0,.9fr) minmax(0,2.5fr) minmax(0,.9fr);gap:5px}
-.pl{font-size:13px}
-.av{height:60px}
-.pc div{font-size:27px}
+.pl{font-size:12px}
+.av{height:40px;max-width:40px;font-size:14px}
+.pc div{font-size:22px}
 .pc small{font-size:11px}
-.mid{padding:11px 5px}
+.mid{padding:7px 5px}
 }
 </style>
 </head>
@@ -375,27 +374,32 @@ return c
 function detail(d,m){
 d.appendChild(el("div","res","Calcul en cours…"));
 var u="/match?tour="+m.tour+"&a="+encodeURIComponent(m.a)+"&b="+encodeURIComponent(m.b)+"&surface=auto&best_of=0&tournoi="+encodeURIComponent(m.tournoi||"");
-if(m.lignes&&m.lignes.length)u+="&lignes="+m.lignes.join(",");
 fetch(u).then(function(r){return r.json()}).then(function(r){
 d.innerHTML="";
 if(r.erreur){d.appendChild(el("div","res",r.erreur));return}
 d.appendChild(el("div","res","Surface : "+r.surface+" · "+r.format+" · Jeux attendus : "+r.jeux_attendus));
-var k=Object.keys(r.over);
-if(m.lignes)k=m.lignes.map(function(l){return l.toFixed(1)}).filter(function(x){return r.over[x]!==undefined});
+var k=Object.keys(r.over).sort(function(a,b){return a-b});
+var fr=(m.lignes||[]).map(function(l){return l.toFixed(1)});
+var ja=parseFloat(r.jeux_attendus);
+if(!isNaN(ja)){
+var near=k.filter(function(x){return Math.abs(x-ja)<=4});
+if(near.length)k=near
+}
 if(k.length){
 var t=el("table"),h=el("tr");
 ["Jeux","Plus de","Moins de"].forEach(function(x){h.appendChild(el("th","",x))});
 t.appendChild(h);
 k.forEach(function(x){
 var q=el("tr");
-q.appendChild(el("td","",x));
+q.appendChild(el("td","",x+(fr.indexOf(x)>-1?" ⭐":"")));
 q.appendChild(el("td",r.over[x]>.5?"hi":"",pct(r.over[x])));
 q.appendChild(el("td",r.over[x]<.5?"hi":"",pct(1-r.over[x])));
 t.appendChild(q)
 });
-d.appendChild(t)
+d.appendChild(t);
+d.appendChild(el("div","res","⭐ = ligne proposée en France"))
 }else{
-d.appendChild(el("div","res","Plus/moins de jeux : non proposé en France pour ce match."))
+d.appendChild(el("div","res","Aucune ligne plus/moins de jeux disponible pour ce match."))
 }
 }).catch(function(){
 d.innerHTML="";
