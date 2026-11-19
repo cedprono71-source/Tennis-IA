@@ -54,8 +54,7 @@ def calendrier(tour: str = "atp", date_: str = Query(None, alias="date"), brut: 
         out = []
         for m in matchs:
             c = cotes_fr.chercher(liste, m["a"], m["b"]) if filtre else None
-            if filtre and not c:
-                continue  # non coté en France : retiré
+            m["fr"] = bool(c) if filtre else None  # jouable chez un bookmaker français
             p = preds.get(f"{tour}|{jour}|{m['a']}|{m['b']}")
             m["p_a"] = p.p_a if p else None
             try:
