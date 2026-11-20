@@ -38,8 +38,8 @@ main{padding:0 12px}h2{display:flex;align-items:center;font:800 24px "Exo 2";mar
 .lg{flex:0 0 auto;position:relative;filter:drop-shadow(0 0 12px #a6ff1f99)}.hd>div{position:relative}
 .tt{font:italic 900 36px/1 "Exo 2",Inter,sans-serif;text-shadow:0 3px 14px #000a}.tt b{color:var(--l)}
 .sb{margin-top:6px;font-size:11px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:#9fb0d0}
-.kp{margin:-20px 12px 8px!important}
-.bn{position:relative;line-height:0;background:#050B1E}.bn img{width:100%;height:auto;display:block}.bn:after{content:"";position:absolute;left:0;right:0;bottom:0;height:26px;background:linear-gradient(transparent,var(--bg))}.kp{margin:-18px 12px 8px!important}</style></head><body>
+.kp{margin:10px 12px 8px!important}
+.bn{position:relative;line-height:0;background:#050B1E}.bn img{width:100%;height:auto;display:block}.kp{margin:10px 12px 8px!important}</style></head><body>
 <div class="bn"><img src="/banniere.jpg" alt="TENNIS-IA" width="900" height="189"></div>
 <div class="card kp"><div>Taux de réussite<b id="k1">–</b></div><div>Jouables en France<b class="g" id="k2">–</b></div><div>Matchs du jour<b id="k3">0</b></div></div>
 <div class="tabs"><div class="tab on" data-t="atp">ATP</div><div class="tab" data-t="wta">WTA</div><div class="tab" data-t="suivi">Suivi</div></div>
