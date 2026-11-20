@@ -18,3 +18,10 @@ class Base(DeclarativeBase):
 def init_db():
     import models  # noqa: F401
     Base.metadata.create_all(engine)
+    from sqlalchemy import text
+    for col, typ in (("p_sets", "FLOAT"), ("ligne_sets", "FLOAT"), ("total_sets", "INTEGER"), ("ok_sets", "INTEGER")):
+        try:
+            with engine.begin() as c:
+                c.execute(text(f"ALTER TABLE predictions ADD COLUMN IF NOT EXISTS {col} {typ}"))
+        except Exception:
+            pass
