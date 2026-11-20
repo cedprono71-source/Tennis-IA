@@ -90,6 +90,10 @@ class Prediction(Base):
     total_jeux: Mapped[int | None] = mapped_column(Integer, nullable=True)
     ok_vainqueur: Mapped[int | None] = mapped_column(Integer, nullable=True)
     ok_over: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    p_sets: Mapped[float | None] = mapped_column(Float, nullable=True)       # proba de dépasser ligne_sets
+    ligne_sets: Mapped[float | None] = mapped_column(Float, nullable=True)   # 2.5 (3 sets) ou 3.5 (5 sets)
+    total_sets: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    ok_sets: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
 
 class Cote(Base):
