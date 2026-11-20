@@ -20,6 +20,15 @@ def accueil():
     return PAGE
 
 
+@app.get("/banniere.jpg")
+def banniere():
+    import base64
+    from fastapi.responses import Response
+    from banniere import B64
+    return Response(base64.b64decode(B64), media_type="image/jpeg",
+                    headers={"Cache-Control": "public, max-age=86400"})
+
+
 @app.get("/health")
 def health():
     return {"statut": "ok"}
