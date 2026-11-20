@@ -32,27 +32,15 @@ main{padding:0 12px}h2{display:flex;align-items:center;font:800 24px "Exo 2";mar
 .m{margin:7px 0;padding:9px 12px}.r1{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12px;color:var(--m);font-weight:600}.r1 span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .r2{display:flex;justify-content:space-between;align-items:center;font:700 16px/1.55 "Exo 2"}.sc{font-weight:800;letter-spacing:3px;color:var(--l)}
 .pc2{display:flex;justify-content:space-around;font:800 20px "Exo 2";margin:6px 0}h2{font-size:19px;margin:12px 4px 6px}h2:before{height:22px}
-.sel{width:100%;padding:10px;border-radius:12px;background:#07102a;color:#fff;border:1px solid var(--bd);font-size:14px;margin:4px 0}.det h2{font-size:17px}</style></head><body>
-<div class="hero"><svg class="ball" width="150" height="150" viewBox="0 0 140 140"><defs>
-<radialGradient id="b" cx="36%" cy="30%" r="78%"><stop offset="0" stop-color="#f6ff93"/><stop offset=".45" stop-color="#c8f500"/><stop offset="1" stop-color="#5a9400"/></radialGradient>
-<clipPath id="cb"><circle cx="70" cy="70" r="58"/></clipPath><filter id="gl"><feGaussianBlur stdDeviation="7"/></filter></defs>
-<circle cx="70" cy="70" r="62" fill="#a6ff1f" opacity=".5" filter="url(#gl)"/>
-<circle cx="70" cy="70" r="58" fill="url(#b)"/>
-<g clip-path="url(#cb)" fill="none" stroke-linecap="round"><path d="M6 40C52 56 56 98 14 120" stroke="#fff" stroke-width="7" opacity=".95"/><path d="M134 22C86 52 92 96 132 118" stroke="#fff" stroke-width="7" opacity=".95"/>
-<path d="M6 40C52 56 56 98 14 120" stroke="#9fc800" stroke-width="2" opacity=".5" transform="translate(4 3)"/></g>
-<ellipse cx="48" cy="40" rx="22" ry="11" fill="#fff" opacity=".4" transform="rotate(-32 48 40)"/>
-<circle cx="70" cy="70" r="58" fill="none" stroke="#2f5200" stroke-opacity=".45" stroke-width="2"/></svg>
-<svg class="rk" width="150" height="230" viewBox="0 0 150 230"><defs>
-<linearGradient id="fr" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f2f7ff"/><stop offset=".5" stop-color="#6f86c4"/><stop offset="1" stop-color="#dfe8ff"/></linearGradient>
-<linearGradient id="hd" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4f9a00"/><stop offset=".5" stop-color="#b6f21a"/><stop offset="1" stop-color="#4f9a00"/></linearGradient>
-<clipPath id="cr"><ellipse cx="75" cy="70" rx="42" ry="56"/></clipPath><filter id="g2"><feGaussianBlur stdDeviation="5"/></filter></defs>
-<g transform="rotate(18 75 120)"><ellipse cx="75" cy="70" rx="46" ry="60" fill="none" stroke="#a6ff1f" stroke-width="8" opacity=".35" filter="url(#g2)"/>
-<ellipse cx="75" cy="70" rx="42" ry="56" fill="#0a1636" fill-opacity=".45"/>
-<g clip-path="url(#cr)" stroke="#cfe0ff" stroke-width="1.1" opacity=".7"><path d="M45 10V130M55 10V130M65 10V130M75 10V130M85 10V130M95 10V130M105 10V130M30 30H120M30 42H120M30 54H120M30 66H120M30 78H120M30 90H120M30 102H120"/></g>
-<ellipse cx="75" cy="70" rx="42" ry="56" fill="none" stroke="url(#fr)" stroke-width="9"/><ellipse cx="75" cy="70" rx="37.5" ry="51.5" fill="none" stroke="#a6ff1f" stroke-width="1.6" opacity=".8"/>
-<path d="M52 118L72 160M98 118L78 160" stroke="url(#fr)" stroke-width="7" stroke-linecap="round"/><path d="M60 126L75 158L90 126Z" fill="#0a1636" opacity=".7"/>
-<rect x="66" y="156" width="18" height="64" rx="7" fill="url(#hd)"/><path d="M66 166l18-6M66 178l18-6M66 190l18-6M66 202l18-6" stroke="#fff" stroke-opacity=".45" stroke-width="2"/><rect x="64" y="216" width="22" height="9" rx="4" fill="#0f1a3d"/></g></svg>
-<h1>TENNIS-<b>IA</b></h1></div>
+.sel{width:100%;padding:10px;border-radius:12px;background:#07102a;color:#fff;border:1px solid var(--bd);font-size:14px;margin:4px 0}.det h2{font-size:17px}.hd{display:flex;align-items:center;gap:14px;padding:18px 20px 38px;position:relative;overflow:hidden;background:radial-gradient(110% 150% at 0% 0%,#1a3c96 0,transparent 55%),radial-gradient(80% 120% at 100% 100%,#0e3b2c 0,transparent 60%),linear-gradient(180deg,#071433,#050B1E)}
+.hd:before{content:"";position:absolute;inset:0;opacity:.5;background-image:linear-gradient(#ffffff0c 1px,transparent 1px),linear-gradient(90deg,#ffffff0c 1px,transparent 1px);background-size:26px 26px;-webkit-mask-image:linear-gradient(90deg,#000,transparent 85%);mask-image:linear-gradient(90deg,#000,transparent 85%)}
+.hd:after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:linear-gradient(90deg,transparent,var(--l),transparent);box-shadow:0 0 16px 2px #a6ff1f77}
+.lg{flex:0 0 auto;position:relative;filter:drop-shadow(0 0 12px #a6ff1f99)}.hd>div{position:relative}
+.tt{font:italic 900 36px/1 "Exo 2",Inter,sans-serif;text-shadow:0 3px 14px #000a}.tt b{color:var(--l)}
+.sb{margin-top:6px;font-size:11px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:#9fb0d0}
+.kp{margin:-20px 12px 8px!important}
+.bn{position:relative;line-height:0;background:#050B1E}.bn img{width:100%;height:auto;display:block}.bn:after{content:"";position:absolute;left:0;right:0;bottom:0;height:26px;background:linear-gradient(transparent,var(--bg))}.kp{margin:-18px 12px 8px!important}</style></head><body>
+<div class="bn"><img src="/banniere.jpg" alt="TENNIS-IA" width="900" height="189"></div>
 <div class="card kp"><div>Taux de réussite<b id="k1">–</b></div><div>Jouables en France<b class="g" id="k2">–</b></div><div>Matchs du jour<b id="k3">0</b></div></div>
 <div class="tabs"><div class="tab on" data-t="atp">ATP</div><div class="tab" data-t="wta">WTA</div><div class="tab" data-t="suivi">Suivi</div></div>
 <div class="days" id="days"></div><main id="list"></main>
