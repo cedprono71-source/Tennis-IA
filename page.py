@@ -32,7 +32,7 @@ main{padding:0 12px}h2{display:flex;align-items:center;font:800 24px "Exo 2";mar
 .m{margin:7px 0;padding:9px 12px}.r1{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12px;color:var(--m);font-weight:600}.r1 span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .r2{display:flex;justify-content:space-between;align-items:center;font:700 16px/1.55 "Exo 2"}.sc{font-weight:800;letter-spacing:3px;color:var(--l)}
 .pc2{display:flex;justify-content:space-around;font:800 20px "Exo 2";margin:6px 0}h2{font-size:19px;margin:12px 4px 6px}h2:before{height:22px}
-</style></head><body>
+.sel{width:100%;padding:10px;border-radius:12px;background:#07102a;color:#fff;border:1px solid var(--bd);font-size:14px;margin:4px 0}.det h2{font-size:17px}</style></head><body>
 <div class="hero"><svg class="ball" width="150" height="150" viewBox="0 0 140 140"><defs>
 <radialGradient id="b" cx="36%" cy="30%" r="78%"><stop offset="0" stop-color="#f6ff93"/><stop offset=".45" stop-color="#c8f500"/><stop offset="1" stop-color="#5a9400"/></radialGradient>
 <clipPath id="cb"><circle cx="70" cy="70" r="58"/></clipPath><filter id="gl"><feGaussianBlur stdDeviation="7"/></filter></defs>
@@ -90,7 +90,18 @@ function detail(d,m){
     var k=Object.keys(r.over).sort(function(a,b){return a-b}),t=el("table"),h=el("tr");
     ["Jeux","Plus de","Moins de"].forEach(function(x){h.appendChild(el("th","",x))});t.appendChild(h);
     k.forEach(function(x){var q=el("tr");q.appendChild(el("td","",(fr[x]?"⭐ ":"")+x));q.appendChild(el("td",r.over[x]>.5?"hi":"",pct(r.over[x])));q.appendChild(el("td",r.over[x]<.5?"hi":"",pct(1-r.over[x])));t.appendChild(q)});
-    d.appendChild(t);if(Object.keys(fr).length)d.appendChild(el("div","res","⭐ = ligne proposée par un bookmaker français"))})}
+    d.appendChild(t);if(Object.keys(fr).length)d.appendChild(el("div","res","⭐ = ligne proposée par un bookmaker français"));
+    var bo5=/5/.test(r.format),dist={};Object.keys(r.sets).forEach(function(k){var q=k.split("-"),z=+q[0]+ +q[1];dist[z]=(dist[z]||0)+r.sets[k]});
+    d.appendChild(el("h2","","Nombre de sets"));var ts=el("table"),tr0=el("tr");["Sets","Plus de","Moins de"].forEach(function(x){tr0.appendChild(el("th","",x))});ts.appendChild(tr0);
+    (bo5?[3.5,4.5]:[2.5]).forEach(function(l){var o=0;Object.keys(dist).forEach(function(z){if(+z>l)o+=dist[z]});var q=el("tr");q.appendChild(el("td","",String(l)));q.appendChild(el("td",o>.5?"hi":"",pct(o)));q.appendChild(el("td",o<.5?"hi":"",pct(1-o)));ts.appendChild(q)});d.appendChild(ts);
+    var t2=el("table"),h2=el("tr");["Score en sets ("+n[0].split(" ").pop()+" – "+n[1].split(" ").pop()+")","Proba"].forEach(function(x){h2.appendChild(el("th","",x))});t2.appendChild(h2);
+    Object.keys(r.sets).forEach(function(k){var q=el("tr");q.appendChild(el("td","",k));q.appendChild(el("td",r.sets[k]>=.25?"hi":"",pct(r.sets[k])));t2.appendChild(q)});d.appendChild(t2);
+    if(r.aces){var sel=el("select","sel"),box=el("div");[["total","Aces : total du match"],["a","Aces : "+r.aces.a.nom.split(" ").pop()],["b","Aces : "+r.aces.b.nom.split(" ").pop()]].forEach(function(o){var e=el("option","",o[1]);e.value=o[0];sel.appendChild(e)});
+      function show(){box.innerHTML="";var a=r.aces[sel.value],tb=el("table"),hh=el("tr");["Aces","Plus de","Moins de"].forEach(function(x){hh.appendChild(el("th","",x))});tb.appendChild(hh);
+        Object.keys(a.over).sort(function(x,y){return x-y}).forEach(function(l){var q=el("tr");q.appendChild(el("td","",l));q.appendChild(el("td",a.over[l]>.5?"hi":"",pct(a.over[l])));q.appendChild(el("td",a.over[l]<.5?"hi":"",pct(1-a.over[l])));tb.appendChild(q)});
+        box.appendChild(el("div","res","Aces attendus : "+a.attendus));box.appendChild(tb)}
+      sel.onclick=function(e){e.stopPropagation()};sel.onchange=show;d.appendChild(el("h2","","Aces"));d.appendChild(sel);d.appendChild(box);show();
+      d.appendChild(el("div","res","Aces : pas de cotes en direct, à vérifier chez ton bookmaker."))}})}
 function kpis(ms){document.getElementById("k3").textContent=ms.length;var n=ms.filter(function(m){return m.fr}).length;document.getElementById("k2").textContent=n?"⭐ "+n:"–"}
 function home(main){
   api(S.tour,S.jour).then(function(d){main.innerHTML="";if(d.erreur){main.appendChild(el("div","mut",d.erreur));return}
@@ -102,9 +113,9 @@ function home(main){
   }).catch(function(){main.innerHTML="";main.appendChild(el("div","mut","Erreur réseau"))})}
 function suivi(main){fetch("/api/suivi").then(function(r){return r.json()}).then(function(d){main.innerHTML="";if(d.erreur){main.appendChild(el("div","mut",d.erreur));return}
   var v=d.vainqueur,o=d.over_under,g=el("div","kpis");
-  [[d.n?pct(v.reussite):"–","Vainqueur trouvé ("+d.n+")"],[v.forts_n?pct(v.forts_reussite):"–","Favoris ≥65% ("+v.forts_n+")"],[o.n?pct(o.reussite):"–","Plus/moins de jeux ("+o.n+")"],[o.n?o.jeux_prevus+" / "+o.jeux_reels:"–","Jeux prévus / réels"]].forEach(function(a){var c=el("div","card");c.appendChild(el("b","",a[0]));c.appendChild(el("span","",a[1]));g.appendChild(c)});
+  [[d.n?pct(v.reussite):"–","Vainqueur trouvé ("+d.n+")"],[v.forts_n?pct(v.forts_reussite):"–","Favoris ≥65% ("+v.forts_n+")"],[o.n?pct(o.reussite):"–","Plus/moins de jeux ("+o.n+")"],[o.n?o.jeux_prevus+" / "+o.jeux_reels:"–","Jeux prévus / réels"],[d.sets&&d.sets.n?pct(d.sets.reussite):"–","Nombre de sets ("+(d.sets?d.sets.n:0)+")"]].forEach(function(a){var c=el("div","card");c.appendChild(el("b","",a[0]));c.appendChild(el("span","",a[1]));g.appendChild(c)});
   main.appendChild(g);if(d.n)document.getElementById("k1").textContent=pct(v.reussite);
-  d.derniers.forEach(function(p){var c=el("div","card m");c.appendChild(el("div","top",p.jour.slice(5)+" · "+p.tournoi));c.appendChild(el("div","res",p.a+" "+pct(p.p_a)+" — "+p.b+" "+pct(1-p.p_a)+" → "+(p.ok_vainqueur?"✅":"❌")+(p.ok_over!=null?"  |  "+p.total_jeux+" jeux "+(p.ok_over?"✅":"❌"):"")));main.appendChild(c)})})}
+  d.derniers.forEach(function(p){var c=el("div","card m");c.appendChild(el("div","top",p.jour.slice(5)+" · "+p.tournoi));c.appendChild(el("div","res",p.a+" "+pct(p.p_a)+" — "+p.b+" "+pct(1-p.p_a)+" → "+(p.ok_vainqueur?"✅":"❌")+(p.ok_over!=null?"  |  "+p.total_jeux+" jeux "+(p.ok_over?"✅":"❌"):"")+(p.ok_sets!=null?"  |  "+p.total_sets+" sets "+(p.ok_sets?"✅":"❌"):"")));main.appendChild(c)})})}
 function go(){var m=document.getElementById("list");m.innerHTML="";m.appendChild(el("div","mut","Chargement…"));
   if(S.tour==="suivi")suivi(m);else home(m)}
 document.querySelectorAll(".tab").forEach(function(t){t.onclick=function(){document.querySelectorAll(".tab").forEach(function(x){x.classList.remove("on")});t.classList.add("on");S.tour=t.dataset.t;go()}});
