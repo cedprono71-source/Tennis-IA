@@ -22,13 +22,21 @@ def cle(tour, jour, a, b):
     return f"{tour}|{jour}|{a}|{b}"
 
 
+def _sets_over(sets, ligne):
+    return sum(p for k, p in sets.items() if sum(int(x) for x in k.split("-")) > ligne)
+
+
 def calculer(m):
     out = predict.pronostic(m["tour"], m["a"], m["b"], "auto", 0, None, m["tournoi"])
     if "erreur" in out:
         return None
     esp = out["jeux_attendus"]
     ligne = int(esp) + 0.5
+    bo5 = "5" in out.get("format", "")
+    ligne_sets = 3.5 if bo5 else 2.5
     return {
+        "p_sets": round(_sets_over(out["sets"], ligne_sets), 4),
+        "ligne_sets": ligne_sets,
         "surface": out["surface"],
         "best_of": 5 if "5" in out.get("format", "") else 3,
         "p_a": list(out["proba_victoire_elo"].values())[0],
@@ -96,7 +104,12 @@ def maj_resultats():
                     p.statut = "annule"
                     continue
                 total = sum(sum(x) for x in m["scores"])
-                p.gagnant, p.total_jeux, p.statut = m["gagnant"], total, "fait"
+                nb_sets = len(m["scores"][0])
+                p.gagnant, p.total_jeux = m["gagnant"], total
+                if p.ligne_sets is not None and p.p_sets is not None and nb_sets > 0:
+                    p.total_sets = nb_sets
+                    p.ok_sets = int((p.p_sets > 0.5) == (nb_sets > p.ligne_sets))
+                p.statut = "fait"
                 p.ok_vainqueur = int((p.p_a > 0.5) == (m["gagnant"] == 0))
                 if p.ligne is not None and p.p_over is not None and total > 0:
                     p.ok_over = int((p.p_over > 0.5) == (total > p.ligne))
@@ -133,6 +146,7 @@ def calc_stats(rows):
     ps = [min(max(p.p_a, 1e-6), 1 - 1e-6) for p in rows]
     forts = [p for p in rows if max(p.p_a, 1 - p.p_a) >= 0.65]
     ou = [p for p in rows if p.ok_over is not None]
+    st = [p for p in rows if p.ok_sets is not None]
     par_tour = {}
     for t in ("atp", "wta"):
         L = [p for p in rows if p.tour == t]
@@ -152,6 +166,7 @@ def calc_stats(rows):
             "jeux_prevus": r(moy([p.jeux_attendus for p in ou]), 2),
             "jeux_reels": r(moy([p.total_jeux for p in ou]), 2),
         },
+        "sets": {"n": len(st), "reussite": r(moy([p.ok_sets for p in st]))},
         "par_tour": par_tour,
     }
 
@@ -170,5 +185,6 @@ def stats():
             "gagnant": p.gagnant, "total_jeux": p.total_jeux, "ligne": p.ligne,
             "p_over": None if p.p_over is None else round(p.p_over, 3),
             "ok_vainqueur": p.ok_vainqueur, "ok_over": p.ok_over,
+            "total_sets": p.total_sets, "ok_sets": p.ok_sets,
         } for p in derniers]
         return out
