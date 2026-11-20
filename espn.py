@@ -46,6 +46,7 @@ def _parse_match(c, tournoi, tour):
         "tour": tour,
         "tournoi": tournoi,
         "tour_tableau": (c.get("round") or {}).get("displayName") or "",
+        "match_id": c.get("id"),
         "heure_utc": c.get("date") or c.get("startDate"),
         "statut": st.get("description") or "",
         "etat": st.get("state") or "",  # pre / in / post
@@ -73,6 +74,7 @@ def matchs_du_jour(tour, jour: date):
             m = _parse_match(c, tournoi, tour)
             if not m:
                 continue
+            m["event_id"] = ev.get("id")
             v = ev.get("venue") or {}
             m["ville"] = (v.get("address") or {}).get("city")
             m["indoor"] = v.get("indoor")
