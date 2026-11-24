@@ -1,4 +1,4 @@
-⁹name: maj-tennis
+name: maj-tennis
 on:
   schedule:
     - cron: "20 * * * *"
